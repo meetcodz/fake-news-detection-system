@@ -1,7 +1,3 @@
-"""Integration tests for baseline training and inference."""
-
-from __future__ import annotations
-
 import json
 from pathlib import Path
 
@@ -19,9 +15,8 @@ def training_config_path(tmp_path, project_root) -> Path:
     base_config["output"]["model_dir"] = str(tmp_path / "models")
 
     config_path = tmp_path / "baseline.yaml"
-    import yaml
-
-    config_path.write_text(yaml.dump(base_config), encoding="utf-8")
+    with open(config_path, "w") as f:
+        json.dump(base_config, f, indent=2)
     return config_path
 
 
@@ -35,7 +30,7 @@ def test_train_baseline_produces_metrics_and_artifacts(
     assert Path(result["artifacts"]["vectorizer"]).exists()
     assert Path(result["artifacts"]["classifier"]).exists()
 
-    metrics = json.loads(Path(result["artifacts"]["metrics"]).read_text(encoding="utf-8"))
+    metrics = json.loads(Path(result["artifacts"]["metrics"]).read_text())
     assert "accuracy" in metrics
     assert "confusion_matrix" in metrics
 

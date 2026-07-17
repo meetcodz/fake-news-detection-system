@@ -1,0 +1,43 @@
+dataset:
+  path: data/raw/WELFake_Dataset.csv
+  text_column: text
+  title_column: title
+  combine_title_text: true
+  label_column: label
+  drop_missing_text: true
+
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_html: true
+  min_text_length: 20
+
+features:
+  type: tfidf
+  max_features: 20000
+  ngram_range: [1, 2]
+  min_df: 5
+  max_df: 0.9
+  sublinear_tf: true
+
+model:
+  name: logistic_regression
+  C: 1.0
+  max_iter: 1000
+  class_weight: balanced
+  random_state: 42
+
+training:
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+
+output:
+  model_dir: models/baseline
+  vectorizer_filename: tfidf_vectorizer.joblib
+  classifier_filename: logistic_regression.joblib
+  metrics_filename: metrics.json
+
+logging:
+  level: INFO
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"

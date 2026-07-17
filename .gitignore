@@ -27,3 +27,6 @@ reports/
 .env
 
 .DS_Store
+
+.cursor/
+.aider*

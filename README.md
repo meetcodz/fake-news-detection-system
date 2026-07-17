@@ -51,6 +51,12 @@ Expected CSV columns: `text`, `label` (`0` = real, `1` = fake). For WELFake, con
 
 **Current dataset:** `data/raw/WELFake_Dataset.csv` (~72k articles)
 
+## Stage 2 result
+
+The full WELFake comparison selected a calibrated Linear SVM for deployment. The
+complete experiment protocol, metrics, and limitations are documented in
+[`docs/stage_2_classical_models.md`](docs/stage_2_classical_models.md).
+
 ## Project layout
 
 ```

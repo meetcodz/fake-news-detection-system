@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
+from sklearn.calibration import CalibratedClassifierCV
 
 from src.models.classical import build_classical_model
 from src.models.compare import compare_classical_models
+from src.models.pipeline import deduplicate_examples
 
 
 def test_build_classical_model_supports_core_estimators() -> None:
@@ -18,6 +20,22 @@ def test_build_classical_model_supports_core_estimators() -> None:
 
     assert logistic.__class__.__name__ == "LogisticRegression"
     assert naive_bayes.__class__.__name__ == "MultinomialNB"
+
+
+def test_build_classical_model_can_calibrate_svm() -> None:
+    classifier = build_classical_model("svm", {"calibrate": True, "calibration_cv": 2})
+
+    assert isinstance(classifier, CalibratedClassifierCV)
+
+
+def test_deduplicate_examples_removes_conflicts_and_repeats() -> None:
+    texts, labels = deduplicate_examples(
+        ["same", "same", "conflict", "conflict", "unique"],
+        [0, 0, 0, 1, 1],
+    )
+
+    assert texts == ["same", "unique"]
+    assert labels == [0, 1]
 
 
 def test_compare_classical_models_writes_comparison_table(
@@ -43,3 +61,8 @@ def test_compare_classical_models_writes_comparison_table(
     assert csv_path.exists()
     assert json_path.exists()
     assert len(json.loads(json_path.read_text(encoding="utf-8"))) == 2
+    for model_name in ("logistic_regression", "naive_bayes"):
+        metadata_path = tmp_path / "models" / model_name / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        assert metadata["model_name"] == model_name
+        assert metadata["dataset"]["training_samples"] > 0

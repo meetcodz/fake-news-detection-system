@@ -1,11 +1,5 @@
-"""Centralized logging configuration."""
-
-from __future__ import annotations
-
 import logging
-import sys
-from typing import Any
-
+from pathlib import Path
 
 def setup_logging(config: dict[str, Any] | None = None) -> None:
     """Configure the root logger from an optional config mapping."""
@@ -23,7 +17,7 @@ def setup_logging(config: dict[str, Any] | None = None) -> None:
         root_logger.setLevel(level)
         return
 
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter(log_format))
     root_logger.addHandler(handler)
     root_logger.setLevel(level)

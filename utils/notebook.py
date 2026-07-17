@@ -1,11 +1,4 @@
-"""Portable notebook environment setup."""
-
-from __future__ import annotations
-
-import subprocess
-import sys
 from pathlib import Path
-
 
 def find_project_root(marker: str = "pyproject.toml") -> Path:
     """Locate the repository root by walking up from the current directory."""
@@ -39,6 +32,9 @@ def setup_notebook_environment(
         sys.path.insert(0, root_str)
 
     if install_package:
+        import subprocess
+        import sys
+
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "-q", f".[{extras}]"],
             cwd=root,

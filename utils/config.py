@@ -1,7 +1,3 @@
-"""Configuration loading utilities."""
-
-from __future__ import annotations
-
 import os
 from pathlib import Path
 from typing import Any
@@ -10,18 +6,13 @@ import yaml
 
 
 def load_config(config_path: str | Path) -> dict[str, Any]:
-    """Load a YAML configuration file and apply environment overrides.
-
-    Environment variables prefixed with ``FND_`` override nested keys using
-    double-underscore notation, e.g. ``FND_DATASET__PATH`` maps to
-    ``dataset.path``.
-    """
+    """Load a YAML configuration file and apply environment overrides."""
     path = Path(config_path)
     if not path.exists():
         raise FileNotFoundError(f"Configuration file not found: {path}")
 
-    with path.open(encoding="utf-8") as handle:
-        config = yaml.safe_load(handle)
+    with open(path, "r") as f:
+        config = yaml.safe_load(f)
 
     if not isinstance(config, dict):
         raise ValueError(f"Configuration root must be a mapping: {path}")

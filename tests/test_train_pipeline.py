@@ -29,10 +29,15 @@ def test_train_baseline_produces_metrics_and_artifacts(
     assert result["metrics"]["f1"] >= 0.0
     assert Path(result["artifacts"]["vectorizer"]).exists()
     assert Path(result["artifacts"]["classifier"]).exists()
+    assert Path(result["artifacts"]["metadata"]).exists()
 
     metrics = json.loads(Path(result["artifacts"]["metrics"]).read_text())
     assert "accuracy" in metrics
     assert "confusion_matrix" in metrics
+
+    metadata = json.loads(Path(result["artifacts"]["metadata"]).read_text())
+    assert metadata["dataset"]["version"] == "WELFake_Dataset.csv"
+    assert metadata["model_config"]["name"] == "logistic_regression"
 
 
 def test_predict_text_after_training(training_config_path) -> None:

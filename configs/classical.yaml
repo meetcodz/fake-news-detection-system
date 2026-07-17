@@ -1,5 +1,6 @@
 dataset:
   path: data/raw/WELFake_Dataset.csv
+  version: WELFake_Dataset.csv
   text_column: text
   title_column: title
   combine_title_text: true
@@ -40,6 +41,9 @@ model_configs:
   svm:
     C: 1.0
     max_iter: 3000
+    calibrate: true
+    calibration_method: sigmoid
+    calibration_cv: 5
   random_forest:
     n_estimators: 100
     max_depth: 30
@@ -52,14 +56,19 @@ training:
   test_size: 0.2
   random_state: 42
   stratify: true
+  deduplicate: true
 
 output:
   model_dir: models/classical
   vectorizer_filename: tfidf_vectorizer.joblib
   classifier_filename: classifier.joblib
   metrics_filename: metrics.json
+  metadata_filename: metadata.json
   comparison_csv: model_comparison.csv
   comparison_json: model_comparison.json
+
+deployment:
+  model_name: svm
 
 logging:
   level: INFO

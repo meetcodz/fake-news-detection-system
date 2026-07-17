@@ -1,5 +1,6 @@
 dataset:
   path: data/raw/WELFake_Dataset.csv
+  version: WELFake_Dataset.csv
   text_column: text
   title_column: title
   combine_title_text: true
@@ -37,6 +38,7 @@ output:
   vectorizer_filename: tfidf_vectorizer.joblib
   classifier_filename: logistic_regression.joblib
   metrics_filename: metrics.json
+  metadata_filename: metadata.json
 
 logging:
   level: INFO

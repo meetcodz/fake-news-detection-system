@@ -1,5 +1,5 @@
 import logging
-from pathlib import Path
+from typing import Any
 
 def setup_logging(config: dict[str, Any] | None = None) -> None:
     """Configure the root logger from an optional config mapping."""

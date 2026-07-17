@@ -1,5 +1,9 @@
 import pandas as pd
 
+from utils.logging import get_logger
+
+logger = get_logger(__name__)
+
 def build_text_column(
     frame: pd.DataFrame,
     text_column: str,
@@ -47,6 +51,6 @@ def drop_invalid_rows(
 
     dropped = len(frame) - len(cleaned)
     if dropped:
-        print(f"Dropped {dropped} invalid dataset rows")
+        logger.warning("Dropped %d invalid dataset rows", dropped)
 
     return cleaned.reset_index(drop=True)

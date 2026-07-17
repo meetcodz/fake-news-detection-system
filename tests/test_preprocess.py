@@ -16,6 +16,22 @@ def test_preprocess_text_normalizes_urls_and_html() -> None:
     assert cleaned == "visit for info"
 
 
+def test_preprocess_text_respects_cleanup_flags() -> None:
+    """Configured cleanup operations can be disabled when needed."""
+    raw = "Visit <b>HTTPS://EXAMPLE.COM</b>"
+
+    cleaned = preprocess_text(
+        raw,
+        {
+            "lowercase": False,
+            "remove_urls": False,
+            "remove_html": False,
+        },
+    )
+
+    assert cleaned == raw
+
+
 def test_preprocess_text_rejects_empty_input() -> None:
     with pytest.raises(ValueError):
         preprocess_text("   ", config={"min_text_length": 3})

@@ -1,4 +1,13 @@
+"""Text preprocessing for news classification."""
+
+from __future__ import annotations
+
 import re
+from typing import Any
+
+from utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 def preprocess_text(text: str, config: dict[str, Any] | None = None) -> str:
     """Clean and normalize a single text document."""
@@ -7,9 +16,13 @@ def preprocess_text(text: str, config: dict[str, Any] | None = None) -> str:
 
     settings = config or {}
     
-    cleaned = re.sub(r"https?://\S+|www\.\S+", " ", text)
-    cleaned = re.sub(r"<[^>]+>", " ", cleaned)
-    cleaned = cleaned.lower()
+    cleaned = text
+    if settings.get("remove_urls", True):
+        cleaned = re.sub(r"https?://\S+|www\.\S+", " ", cleaned)
+    if settings.get("remove_html", True):
+        cleaned = re.sub(r"<[^>]+>", " ", cleaned)
+    if settings.get("lowercase", True):
+        cleaned = cleaned.lower()
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     min_length = int(settings.get("min_text_length", 1))
@@ -50,13 +63,13 @@ def preprocess_dataset(
                 processed_labels.append(labels[index])
         except ValueError as exc:
             skipped += 1
-            print(f"Skipped document during preprocessing: {exc}")
+            logger.warning("Skipped document during preprocessing: %s", exc)
 
     if not processed_texts:
         raise ValueError("No valid documents remain after preprocessing")
 
     if skipped:
-        print(f"Preprocessing skipped {skipped} documents")
+        logger.warning("Preprocessing skipped %d documents", skipped)
 
     if labels is None:
         return processed_texts, None

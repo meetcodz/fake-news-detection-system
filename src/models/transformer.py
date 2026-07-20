@@ -82,12 +82,22 @@ def _numpy_softmax(x: np.ndarray) -> np.ndarray:
 
 
 def compute_transformer_metrics(eval_pred: EvalPrediction) -> dict[str, Any]:
-    """Compute standard binary metrics from transformer evaluation predictions."""
+    """Compute standard binary metrics from transformer evaluation predictions.
+
+    Guards against NaN logits that can occur during early DeBERTa training steps.
+    When NaNs are present, ROC-AUC is skipped for that checkpoint.
+    """
     logits, labels = eval_pred.predictions, eval_pred.label_ids
     if isinstance(logits, tuple):
         logits = logits[0]
     preds = np.argmax(logits, axis=-1)
-    probs = _numpy_softmax(logits)[:, 1] if logits.ndim == 2 and logits.shape[1] == 2 else None
+    probs: np.ndarray | None = None
+    if logits.ndim == 2 and logits.shape[1] == 2:
+        raw_probs = _numpy_softmax(logits)[:, 1]
+        # Skip probability-based metrics if logits produced NaN (numerical instability)
+        probs = raw_probs if not np.isnan(raw_probs).any() else None
+        if probs is None:
+            logger.warning("NaN probabilities detected in eval logits — ROC-AUC skipped for this checkpoint")
     return compute_binary_metrics(labels, preds, probs)
 
 
@@ -114,10 +124,20 @@ def train_transformer_classifier(
     train_dataset = TransformerDataset(splits.train_texts, splits.train_labels, tokenizer, max_len)
     val_dataset = TransformerDataset(splits.test_texts, splits.test_labels, tokenizer, max_len)
     
-    # Resolve training device
+    # Resolve training device and mixed precision
     device_name = str(training_cfg.get("device", "auto")).lower()
     use_cpu = device_name == "cpu" or (device_name == "auto" and not torch.cuda.is_available())
-    fp16 = bool(training_cfg.get("fp16", True)) and torch.cuda.is_available() and not use_cpu
+    gpu_available = torch.cuda.is_available() and not use_cpu
+
+    # Prefer bf16 (numerically stable, works on Ampere+) over fp16 for transformers;
+    # fall back to fp16 only if bf16 is not supported; use neither on CPU.
+    bf16 = gpu_available and torch.cuda.is_bf16_supported()
+    fp16 = gpu_available and not bf16 and bool(training_cfg.get("fp16", False))
+
+    # Compute warmup steps from ratio so we don't use the deprecated warmup_ratio arg
+    steps_per_epoch = max(1, len(train_dataset) // int(training_cfg.get("batch_size", 16)))
+    total_steps = steps_per_epoch * int(training_cfg.get("epochs", 3))
+    warmup_steps = int(total_steps * float(training_cfg.get("warmup_ratio", 0.1)))
 
     # Setup training arguments
     args = TrainingArguments(
@@ -129,14 +149,16 @@ def train_transformer_classifier(
         per_device_eval_batch_size=int(training_cfg.get("batch_size", 16)),
         num_train_epochs=int(training_cfg.get("epochs", 3)),
         weight_decay=float(training_cfg.get("weight_decay", 0.01)),
+        max_grad_norm=float(training_cfg.get("max_grad_norm", 1.0)),
         logging_steps=int(training_cfg.get("logging_steps", 100)),
         load_best_model_at_end=True,
         metric_for_best_model="f1",
         greater_is_better=True,
         fp16=fp16,
+        bf16=bf16,
         use_cpu=use_cpu,
         report_to="none",
-        warmup_ratio=float(training_cfg.get("warmup_ratio", 0.1)),
+        warmup_steps=warmup_steps,
         seed=int(training_cfg.get("random_state", 42)),
     )
     

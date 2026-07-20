@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 def find_project_root(marker: str = "pyproject.toml") -> Path:
@@ -33,7 +34,6 @@ def setup_notebook_environment(
 
     if install_package:
         import subprocess
-        import sys
 
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "-q", f".[{extras}]"],

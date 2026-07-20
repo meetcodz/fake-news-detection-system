@@ -44,6 +44,15 @@ def test_compare_classical_models_writes_comparison_table(
 ) -> None:
     base_config_path = project_root / "configs/classical.yaml"
     base_config = yaml.safe_load(base_config_path.read_text(encoding="utf-8"))
+    
+    # Run on mock/sample dataset to ensure fast test execution
+    base_config["dataset"]["path"] = str(project_root / "data/sample/sample_news.csv")
+    base_config["dataset"]["title_column"] = None
+    base_config["dataset"]["combine_title_text"] = False
+    
+    # Set min_df to 1 so that features are not pruned on the tiny dataset
+    base_config["features"]["min_df"] = 1
+    
     base_config["models"] = ["logistic_regression", "naive_bayes"]
     base_config["output"]["model_dir"] = str(tmp_path / "models")
 

@@ -12,6 +12,15 @@ from utils.config import load_config
 def training_config_path(tmp_path, project_root) -> Path:
     """Write a temporary config that stores artifacts under tmp_path."""
     base_config = load_config(project_root / "configs/baseline.yaml")
+    
+    # Run on mock/sample dataset to ensure fast test execution
+    base_config["dataset"]["path"] = str(project_root / "data/sample/sample_news.csv")
+    base_config["dataset"]["title_column"] = None
+    base_config["dataset"]["combine_title_text"] = False
+    
+    # Set min_df to 1 so that features are not pruned on the tiny dataset
+    base_config["features"]["min_df"] = 1
+    
     base_config["output"]["model_dir"] = str(tmp_path / "models")
 
     config_path = tmp_path / "baseline.yaml"

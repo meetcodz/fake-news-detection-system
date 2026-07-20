@@ -115,7 +115,16 @@ def _save_comparison(
 
 def main() -> None:
     """CLI entry point for classical model comparison."""
-    compare_classical_models("configs/classical.yaml")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Train and compare classical models.")
+    parser.add_argument(
+        "--config",
+        default="configs/classical.yaml",
+        help="Path to the YAML configuration file (default: configs/classical.yaml)",
+    )
+    args = parser.parse_args()
+    compare_classical_models(args.config)
 
 
 if __name__ == "__main__":

@@ -87,6 +87,8 @@ def build_xgboost(config: dict[str, Any]) -> Any:
         eval_metric=config.get("eval_metric", "logloss"),
         random_state=config.get("random_state", 42),
         n_jobs=int(config.get("n_jobs", -1)),
+        tree_method=config.get("tree_method", "hist"),
+        device=config.get("device", "cpu"),
     )
 
 

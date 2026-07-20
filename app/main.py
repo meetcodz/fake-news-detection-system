@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+from typing import Literal
+
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,33 +9,51 @@ from app.schemas import PredictionRequest, PredictionResponse, ModelMetadata
 from src.data.clean import build_text_column
 from src.models.inference import load_model_artifacts, predict_text
 
-# Global state to hold loaded model artifacts
-model_state = {}
+# ---------------------------------------------------------------------------
+# Global state: two model tiers
+#   "headline" — trained on article titles only; accurate for short inputs
+#   "article"  — trained on full text + titles; accurate for long documents
+# ---------------------------------------------------------------------------
+_HEADLINE_THRESHOLD_CHARS = 200  # inputs shorter than this use the headline model
+
+model_state: dict = {}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load model artifacts on startup to avoid loading latency on incoming requests."""
+    """Load both model tiers at startup to avoid per-request latency."""
     try:
-        # Default config path is configs/classical.yaml
-        # It selects the deployment model configured in the deployment.model_name YAML key
-        vectorizer, classifier, config, metadata = load_model_artifacts()
-        model_state["vectorizer"] = vectorizer
-        model_state["classifier"] = classifier
-        model_state["config"] = config
-        model_state["metadata"] = metadata
-    except Exception as e:
-        raise RuntimeError(f"Failed to load model artifacts on startup: {e}")
+        a_vec, a_clf, a_cfg, a_meta = load_model_artifacts("configs/classical.yaml")
+        h_vec, h_clf, h_cfg, h_meta = load_model_artifacts("configs/headline.yaml")
+        model_state["article"] = {
+            "vectorizer": a_vec,
+            "classifier": a_clf,
+            "config": a_cfg,
+            "metadata": a_meta,
+        }
+        model_state["headline"] = {
+            "vectorizer": h_vec,
+            "classifier": h_clf,
+            "config": h_cfg,
+            "metadata": h_meta,
+        }
+    except Exception as exc:
+        raise RuntimeError(f"Failed to load model artifacts on startup: {exc}")
     yield
     model_state.clear()
 
+
 app = FastAPI(
     title="TruthLens Misinformation Detection API",
-    description="REST API for real-time fake news and misinformation detection using calibrated model predictions.",
-    version="0.1.0",
-    lifespan=lifespan
+    description=(
+        "REST API for real-time fake news and misinformation detection. "
+        "Automatically routes short headlines to a headline-tuned model and "
+        "longer articles to a full-text model."
+    ),
+    version="0.2.0",
+    lifespan=lifespan,
 )
 
-# Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,60 +62,97 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+def _resolve_tier(text: str) -> Literal["headline", "article"]:
+    """Pick the appropriate model tier based on input length."""
+    return "headline" if len(text.strip()) < _HEADLINE_THRESHOLD_CHARS else "article"
+
+
+def _apply_threshold(fake_prob: float, deployment_cfg: dict) -> tuple[int, str]:
+    """Apply a configurable threshold and uncertain-band logic to raw probability."""
+    threshold = float(deployment_cfg.get("fake_threshold", 0.50))
+    band = deployment_cfg.get("uncertain_band", [])
+    if band and len(band) == 2:
+        lo, hi = float(band[0]), float(band[1])
+        if lo < fake_prob < hi:
+            return -1, "uncertain"
+    if fake_prob >= threshold:
+        return 1, "fake"
+    return 0, "real"
+
+
 @app.get("/")
 async def root():
-    """Health check endpoint displaying operational status and active model identifier."""
-    if "metadata" not in model_state:
+    """Health check — shows operational status and loaded model names."""
+    if not model_state:
         return {"status": "starting", "message": "Model artifacts loading..."}
     return {
         "status": "ready",
-        "message": "TruthLens Misinformation Detection API is operational.",
-        "active_model": model_state["metadata"]["model_name"]
+        "message": "TruthLens API is operational.",
+        "models": {
+            "article": model_state["article"]["metadata"]["model_name"],
+            "headline": model_state["headline"]["metadata"]["model_name"],
+        },
+        "routing": f"inputs < {_HEADLINE_THRESHOLD_CHARS} chars → headline model",
     }
+
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
-    """Classify a news document body (and optional title) as real or fake news."""
-    if "classifier" not in model_state:
+    """Classify a news headline or article body as real, fake, or uncertain.
+
+    The API automatically selects the best-suited model tier:
+    - **Headline model**: used when input is < 200 characters (title-length)
+    - **Article model**: used for longer, full-article inputs
+
+    Predictions in the 35–65% probability band are returned as ``uncertain``
+    to avoid overconfident wrong answers on genuinely ambiguous text.
+    """
+    if not model_state:
         raise HTTPException(
             status_code=503,
-            detail="Model is currently unavailable. Ensure artifacts are trained and loaded."
+            detail="Model is unavailable. Ensure artifacts are trained and loaded.",
         )
 
     text = request.text
     if request.combine_title_text and request.title:
         df = pd.DataFrame([{"title": request.title, "text": request.text}])
         text = build_text_column(
-            df,
-            text_column="text",
-            title_column="title",
-            combine_title_text=True
+            df, text_column="text", title_column="title", combine_title_text=True
         ).iloc[0]
 
+    tier = _resolve_tier(text)
+    state = model_state[tier]
+
     try:
-        prediction = predict_text(
+        raw = predict_text(
             text=text,
-            vectorizer=model_state["vectorizer"],
-            classifier=model_state["classifier"],
-            preprocessing_config=model_state["config"].get("preprocessing")
+            vectorizer=state["vectorizer"],
+            classifier=state["classifier"],
+            preprocessing_config=state["config"].get("preprocessing"),
         )
     except ValueError as val_err:
         raise HTTPException(status_code=422, detail=str(val_err))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
 
-    metadata = model_state["metadata"]
+    label, label_name = _apply_threshold(
+        raw.fake_probability, state["config"].get("deployment", {})
+    )
+
+    meta = state["metadata"]
     model_meta = ModelMetadata(
-        model_name=metadata["model_name"],
-        trained_at_utc=metadata["trained_at_utc"],
-        dataset=metadata["dataset"],
-        metrics=metadata["metrics"]
+        model_name=meta["model_name"],
+        trained_at_utc=meta["trained_at_utc"],
+        dataset=meta["dataset"],
+        metrics=meta["metrics"],
     )
 
     return PredictionResponse(
-        label=prediction.label,
-        label_name=prediction.label_name,
-        fake_probability=prediction.fake_probability,
-        real_probability=prediction.real_probability,
-        model_metadata=model_meta
+        label=label,
+        label_name=label_name,
+        fake_probability=raw.fake_probability,
+        real_probability=raw.real_probability,
+        model_metadata=model_meta,
+        model_tier=tier,
     )

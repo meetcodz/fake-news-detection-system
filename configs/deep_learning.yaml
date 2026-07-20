@@ -11,6 +11,7 @@ preprocessing:
   lowercase: true
   remove_urls: true
   remove_html: true
+  strip_datelines: true
   min_text_length: 20
 
 training:

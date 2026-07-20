@@ -1,0 +1,41 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Virtual environments
+.venv/
+.venv-stage2/
+venv/
+env/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Data (large CSVs - only sample is needed)
+data/WELFake_Dataset.csv
+data/raw/
+
+# Deep learning model weights (large - not needed for classical SVM API)
+models/deep_learning/
+
+# Docs and extras
+*.md
+LICENSE

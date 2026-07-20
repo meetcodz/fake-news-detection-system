@@ -147,6 +147,7 @@ def train_transformer_classifier(
         learning_rate=float(training_cfg.get("learning_rate", 3e-5)),
         per_device_train_batch_size=int(training_cfg.get("batch_size", 16)),
         per_device_eval_batch_size=int(training_cfg.get("batch_size", 16)),
+        gradient_accumulation_steps=int(training_cfg.get("gradient_accumulation_steps", 1)),
         num_train_epochs=int(training_cfg.get("epochs", 3)),
         weight_decay=float(training_cfg.get("weight_decay", 0.01)),
         max_grad_norm=float(training_cfg.get("max_grad_norm", 1.0)),

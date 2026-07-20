@@ -1,0 +1,63 @@
+dataset:
+  path: data/raw/WELFake_Dataset.csv
+  version: WELFake_Dataset.csv
+  text_column: text
+  title_column: title
+  combine_title_text: true
+  label_column: label
+  drop_missing_text: true
+
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_html: true
+  min_text_length: 20
+
+training:
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+  deduplicate: true
+  device: cuda
+  batch_size: 128
+  epochs: 5
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  patience: 2
+  num_workers: 0
+
+vocabulary:
+  max_size: 30000
+  min_frequency: 2
+  max_sequence_length: 300
+
+models:
+  - bilstm
+  - gru
+
+model_configs:
+  bilstm:
+    embedding_dim: 128
+    hidden_dim: 128
+    num_layers: 2
+    dropout: 0.3
+    bidirectional: true
+  gru:
+    embedding_dim: 128
+    hidden_dim: 128
+    num_layers: 2
+    dropout: 0.3
+    bidirectional: true
+
+output:
+  model_dir: models/deep_learning
+  comparison_csv: model_comparison.csv
+  comparison_json: model_comparison.json
+  checkpoint_filename: model.pt
+  vocabulary_filename: vocabulary.json
+  metrics_filename: metrics.json
+  metadata_filename: metadata.json
+
+logging:
+  level: INFO
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"

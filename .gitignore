@@ -4,9 +4,9 @@ __pycache__/
 *.pyo
 *.egg-info/
 
+.venv-stage2
 venv/
 .venv/
-.venv-stage2/
 env/
 
 .ipynb_checkpoints/
@@ -31,3 +31,5 @@ reports/
 
 .cursor/
 .aider*
+/torch_gpu_install*.log
+AGENTS.md

@@ -1,0 +1,45 @@
+dataset:
+  path: data/raw/WELFake_Dataset.csv
+  version: WELFake_Dataset.csv
+  text_column: text
+  title_column: title
+  combine_title_text: true
+  label_column: label
+  drop_missing_text: true
+  # Optional: Limit dataset size for quick debugging/testing (set to null or delete for full training)
+  max_samples: null
+
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_html: true
+  strip_datelines: true
+  min_text_length: 20
+
+training:
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+  deduplicate: true
+  device: cuda # or cpu / auto
+  batch_size: 16
+  epochs: 3
+  learning_rate: 3.0e-5
+  weight_decay: 0.01
+  patience: 1
+  num_workers: 0
+  max_sequence_length: 256
+  warmup_ratio: 0.1
+  logging_steps: 100
+  fp16: false
+
+models:
+  - distilbert-base-uncased
+  - microsoft/deberta-v3-small
+
+output:
+  model_dir: models/transformer
+  comparison_csv: model_comparison.csv
+  comparison_json: model_comparison.json
+  metrics_filename: metrics.json
+  metadata_filename: metadata.json

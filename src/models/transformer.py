@@ -131,8 +131,8 @@ def train_transformer_classifier(
 
     # Prefer bf16 (numerically stable, works on Ampere+) over fp16 for transformers;
     # fall back to fp16 only if bf16 is not supported; use neither on CPU.
-    bf16 = gpu_available and torch.cuda.is_bf16_supported()
-    fp16 = gpu_available and not bf16 and bool(training_cfg.get("fp16", False))
+    bf16 = gpu_available and bool(training_cfg.get("bf16", False)) and torch.cuda.is_bf16_supported()
+    fp16 = gpu_available and bool(training_cfg.get("fp16", False))
 
     # Compute warmup steps from ratio so we don't use the deprecated warmup_ratio arg
     steps_per_epoch = max(1, len(train_dataset) // int(training_cfg.get("batch_size", 16)))

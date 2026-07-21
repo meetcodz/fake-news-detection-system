@@ -108,3 +108,31 @@ def test_train_deep_classifier_produces_artifacts(
     assert (model_dir / "metrics.json").exists()
     assert (model_dir / "metadata.json").exists()
 
+
+def test_deep_model_inference(project_root) -> None:
+    """Verify that we can load a trained deep learning model and run predictions."""
+    from src.models.inference import load_deep_model_artifacts, predict_deep_text
+
+    try:
+        vocabulary, model, config, metadata = load_deep_model_artifacts(
+            config_path="configs/deep_learning.yaml",
+            model_name="gru"
+        )
+    except FileNotFoundError:
+        pytest.skip("Trained deep learning model 'gru' not found. Run deep_compare first.")
+
+    res = predict_deep_text(
+        text="BREAKING: Scandalous details about the politician revealed!",
+        vocabulary=vocabulary,
+        model=model,
+        preprocessing_config=config.get("preprocessing"),
+        max_sequence_length=config.get("vocabulary", {}).get("max_sequence_length", 300)
+    )
+
+    assert res.label in {0, 1}
+    assert res.label_name in {"real", "fake"}
+    assert 0.0 <= res.fake_probability <= 1.0
+    assert 0.0 <= res.real_probability <= 1.0
+    assert pytest.approx(res.fake_probability + res.real_probability) == 1.0
+
+

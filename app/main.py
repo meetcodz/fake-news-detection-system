@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas import PredictionRequest, PredictionResponse, ModelMetadata
 from src.data.clean import build_text_column
-from src.models.inference import load_model_artifacts, predict_text
+from src.models.inference import load_model_artifacts, predict_text, load_deep_model_artifacts, predict_deep_text
 
 # ---------------------------------------------------------------------------
 # Global state: two model tiers
@@ -37,10 +37,24 @@ async def lifespan(app: FastAPI):
             "config": h_cfg,
             "metadata": h_meta,
         }
+        
+        # Load the deep learning model (GRU)
+        try:
+            d_vocab, d_model, d_cfg, d_meta = load_deep_model_artifacts("configs/deep_learning.yaml", "gru")
+            model_state["deep_learning"] = {
+                "vocabulary": d_vocab,
+                "model": d_model,
+                "config": d_cfg,
+                "metadata": d_meta,
+            }
+        except FileNotFoundError:
+            # Handle case where deep model hasn't been trained yet
+            model_state["deep_learning"] = None
     except Exception as exc:
         raise RuntimeError(f"Failed to load model artifacts on startup: {exc}")
     yield
     model_state.clear()
+
 
 
 app = FastAPI(
@@ -105,6 +119,9 @@ async def predict(request: PredictionRequest):
     - **Headline model**: used when input is < 200 characters (title-length)
     - **Article model**: used for longer, full-article inputs
 
+    Alternatively, users can specify ``model_type="deep_learning"`` to route the prediction
+    through the trained PyTorch sequence model.
+
     Predictions in the 35–65% probability band are returned as ``uncertain``
     to avoid overconfident wrong answers on genuinely ambiguous text.
     """
@@ -121,20 +138,40 @@ async def predict(request: PredictionRequest):
             df, text_column="text", title_column="title", combine_title_text=True
         ).iloc[0]
 
-    tier = _resolve_tier(text)
-    state = model_state[tier]
-
-    try:
-        raw = predict_text(
-            text=text,
-            vectorizer=state["vectorizer"],
-            classifier=state["classifier"],
-            preprocessing_config=state["config"].get("preprocessing"),
-        )
-    except ValueError as val_err:
-        raise HTTPException(status_code=422, detail=str(val_err))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+    if request.model_type == "deep_learning":
+        state = model_state.get("deep_learning")
+        if state is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Deep learning model (GRU) is not trained or loaded.",
+            )
+        tier = "deep_learning"
+        try:
+            raw = predict_deep_text(
+                text=text,
+                vocabulary=state["vocabulary"],
+                model=state["model"],
+                preprocessing_config=state["config"].get("preprocessing"),
+                max_sequence_length=state["config"].get("vocabulary", {}).get("max_sequence_length", 300),
+            )
+        except ValueError as val_err:
+            raise HTTPException(status_code=422, detail=str(val_err))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+    else:
+        tier = _resolve_tier(text)
+        state = model_state[tier]
+        try:
+            raw = predict_text(
+                text=text,
+                vectorizer=state["vectorizer"],
+                classifier=state["classifier"],
+                preprocessing_config=state["config"].get("preprocessing"),
+            )
+        except ValueError as val_err:
+            raise HTTPException(status_code=422, detail=str(val_err))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
 
     label, label_name = _apply_threshold(
         raw.fake_probability, state["config"].get("deployment", {})
@@ -155,4 +192,6 @@ async def predict(request: PredictionRequest):
         real_probability=raw.real_probability,
         model_metadata=model_meta,
         model_tier=tier,
+        model_type=request.model_type,
     )
+

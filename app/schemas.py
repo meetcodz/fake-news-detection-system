@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
@@ -20,6 +21,10 @@ class PredictionRequest(BaseModel):
     combine_title_text: bool = Field(
         True,
         description="Whether to concatenate title and body text prior to classification.",
+    )
+    model_type: Literal["classical", "deep_learning"] = Field(
+        "classical",
+        description="Model architecture type to use ('classical' TF-IDF SVM or 'deep_learning' PyTorch GRU).",
     )
 
 
@@ -57,5 +62,10 @@ class PredictionResponse(BaseModel):
     )
     model_tier: str = Field(
         "article",
-        description="Which model tier was used: 'headline' (< 200 chars) or 'article' (longer).",
+        description="Which model tier was used: 'headline' (< 200 chars), 'article' (longer), or 'deep_learning'.",
     )
+    model_type: str = Field(
+        "classical",
+        description="Model architecture type: 'classical' or 'deep_learning'.",
+    )
+

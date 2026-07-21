@@ -128,3 +128,86 @@ def predict_batch(
 ) -> list[PredictionResult]:
     """Classify multiple documents with any probability-enabled classifier."""
     return [predict_text(text, vectorizer, classifier, preprocessing_config) for text in texts]
+
+
+def load_deep_model_artifacts(
+    config_path: str | Path = "configs/deep_learning.yaml",
+    model_name: str | None = None,
+) -> tuple[Any, Any, dict[str, Any], dict[str, Any]]:
+    """Load a configured deep learning model (BiLSTM/GRU), vocabulary, config, and metadata."""
+    from src.models.deep_learning import Vocabulary, build_deep_model
+    import torch
+
+    root = get_project_root()
+    config_file = Path(config_path)
+    if not config_file.is_absolute():
+        config_file = root / config_file
+
+    config = load_config(config_file)
+    selected_model = model_name or config.get("deployment", {}).get("model_name", "gru")
+
+    output_cfg = config["output"]
+    model_dir = Path(output_cfg["model_dir"])
+    if not model_dir.is_absolute():
+        model_dir = root / model_dir
+    model_dir = model_dir / selected_model
+
+    checkpoint_path = model_dir / output_cfg["checkpoint_filename"]
+    vocabulary_path = model_dir / output_cfg["vocabulary_filename"]
+    metadata_path = model_dir / output_cfg.get("metadata_filename", "metadata.json")
+
+    missing = [path for path in (checkpoint_path, vocabulary_path, metadata_path) if not path.exists()]
+    if missing:
+        raise FileNotFoundError(
+            f"Artifacts for deep model '{selected_model}' are missing: {', '.join(map(str, missing))}"
+        )
+
+    # Load vocabulary
+    vocab_data = json.loads(vocabulary_path.read_text(encoding="utf-8"))
+    vocabulary = Vocabulary(vocab_data)
+
+    # Load metadata and checkpoint
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+
+    # Reconstruct model
+    model = build_deep_model(
+        model_name=selected_model,
+        vocabulary_size=vocabulary.size,
+        config=checkpoint["model_config"],
+    )
+    model.load_state_dict(checkpoint["state_dict"])
+    model.eval()
+
+    return vocabulary, model, config, metadata
+
+
+def predict_deep_text(
+    text: str,
+    vocabulary: Any,
+    model: Any,
+    preprocessing_config: dict[str, Any] | None = None,
+    max_sequence_length: int = 300,
+) -> PredictionResult:
+    """Classify one document using a deep learning sequence classifier."""
+    import torch
+
+    cleaned = preprocess_text(text, preprocessing_config)
+    # Encode text
+    token_ids = vocabulary.encode(cleaned, max_length=max_sequence_length)
+    token_tensor = torch.tensor([token_ids], dtype=torch.long)
+
+    with torch.no_grad():
+        logits = model(token_tensor)
+        probabilities = torch.softmax(logits, dim=1)[0].tolist()
+
+    label = 1 if probabilities[1] >= 0.5 else 0
+    result = PredictionResult(
+        label=label,
+        label_name=LABEL_MAP[label],
+        fake_probability=float(probabilities[1]),
+        real_probability=float(probabilities[0]),
+    )
+    logger.info("Deep prediction complete", extra={"label": result.label_name})
+    return result
+

@@ -62,3 +62,9 @@ output:
 logging:
   level: INFO
   format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+
+deployment:
+  model_name: gru
+  fake_threshold: 0.50
+  uncertain_band: [0.35, 0.65]
+

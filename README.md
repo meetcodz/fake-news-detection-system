@@ -1,6 +1,6 @@
 # Fake News & Misinformation Detection
 
-Modular ML/NLP platform for fake news and misinformation detection. See `PROJECT_CONTEXT.md` and `AGENTS.md` for full architecture and conventions.
+Modular ML/NLP platform for fake news and misinformation detection. See `PROJECT_CONTEXT.md` for full architecture and conventions.
 
 ## Quick start
 

@@ -733,7 +733,7 @@
     /* ---------------------------------------------------------------
        Main TruthLens Component
     --------------------------------------------------------------- */
-    export default function TruthLens() {
+    function TruthLens() {
       const [text, setText] = useState("");
       const [status, setStatus] = useState("idle"); // idle | scanning | done | error
       const [view, setView] = useState("check"); // check | dashboard

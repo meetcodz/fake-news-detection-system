@@ -4,6 +4,7 @@ from typing import Literal
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.schemas import PredictionRequest, PredictionResponse, ModelMetadata
 from src.data.clean import build_text_column
@@ -76,6 +77,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve the React frontend built as static HTML/JSX
+app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
+
 
 def _resolve_tier(text: str) -> Literal["headline", "article"]:
     """Pick the appropriate model tier based on input length."""
@@ -100,14 +104,17 @@ async def root():
     """Health check — shows operational status and loaded model names."""
     if not model_state:
         return {"status": "starting", "message": "Model artifacts loading..."}
+    dl_state = model_state.get("deep_learning")
     return {
         "status": "ready",
-        "message": "TruthLens API is operational.",
+        "message": "TruthLens API is operational. Deep learning (GRU) is the default.",
         "models": {
             "article": model_state["article"]["metadata"]["model_name"],
             "headline": model_state["headline"]["metadata"]["model_name"],
+            "deep_learning": dl_state["metadata"]["model_name"] if dl_state else "not loaded",
         },
-        "routing": f"inputs < {_HEADLINE_THRESHOLD_CHARS} chars → headline model",
+        "default_model": "deep_learning (GRU)",
+        "routing": f"inputs < {_HEADLINE_THRESHOLD_CHARS} chars → headline model (SVM)",
     }
 
 

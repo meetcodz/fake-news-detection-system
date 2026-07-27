@@ -23,8 +23,8 @@ class PredictionRequest(BaseModel):
         description="Whether to concatenate title and body text prior to classification.",
     )
     model_type: Literal["classical", "deep_learning"] = Field(
-        "classical",
-        description="Model architecture type to use ('classical' TF-IDF SVM or 'deep_learning' PyTorch GRU).",
+        "deep_learning",
+        description="Model architecture type to use ('classical' TF-IDF SVM or 'deep_learning' PyTorch GRU). Defaults to GRU.",
     )
 
 

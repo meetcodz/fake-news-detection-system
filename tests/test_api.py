@@ -40,6 +40,7 @@ def test_predict_classical_headline_routing(client: TestClient) -> None:
     assert data["model_tier"] == "headline"
     assert data["model_type"] == "classical"
     assert data["label_name"] in {"real", "fake", "uncertain"}
+    assert isinstance(data.get("flagged_phrases"), list)
 
 
 def test_predict_classical_article_routing(client: TestClient) -> None:
@@ -73,3 +74,22 @@ def test_predict_deep_learning_routing(client: TestClient) -> None:
     assert data["model_tier"] == "deep_learning"
     assert data["model_type"] == "deep_learning"
     assert data["label_name"] in {"real", "fake", "uncertain"}
+    assert isinstance(data.get("flagged_phrases"), list)
+
+
+def test_predict_transformer_routing(client: TestClient) -> None:
+    """Explicit transformer model selection should route to transformer model (DistilBERT)."""
+    res = client.post(
+        "/predict",
+        json={
+            "text": "European leaders meet in Brussels to discuss trade.",
+            "model_type": "transformer",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["model_tier"] == "transformer"
+    assert data["model_type"] == "transformer"
+    assert data["label_name"] in {"real", "fake", "uncertain"}
+    assert "accuracy" in data["model_metadata"]["metrics"]
+    assert isinstance(data.get("flagged_phrases"), list)

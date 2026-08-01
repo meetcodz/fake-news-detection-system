@@ -353,33 +353,7 @@ Do not skip steps.
 
 ---
 
-# Cursor Behavior Rules
 
-Before writing code
-
-1. Understand the existing repository.
-2. Read relevant files.
-3. Explain the implementation plan.
-4. Ask for clarification if requirements are ambiguous.
-
-When writing code
-
-- Modify only requested files.
-- Avoid unnecessary changes.
-- Keep commits small.
-- Preserve project architecture.
-- Explain important design decisions.
-
-After writing code
-
-- Review your own implementation.
-- Suggest improvements.
-- Mention possible edge cases.
-- Recommend tests.
-
-Never rewrite unrelated files.
-
----
 
 # Documentation
 

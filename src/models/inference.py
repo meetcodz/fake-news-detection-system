@@ -211,3 +211,77 @@ def predict_deep_text(
     logger.info("Deep prediction complete", extra={"label": result.label_name})
     return result
 
+
+def load_transformer_model_artifacts(
+    config_path: str | Path = "configs/transformer.yaml",
+    model_name: str | None = None,
+) -> tuple[Any, Any, dict[str, Any], dict[str, Any]]:
+    """Load a HuggingFace transformer model, tokenizer, config, and metadata."""
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+    root = get_project_root()
+    config_file = Path(config_path)
+    if not config_file.is_absolute():
+        config_file = root / config_file
+
+    config = load_config(config_file)
+    selected_model = model_name or "distilbert-base-uncased"
+    folder_name = selected_model.replace("/", "_")
+
+    output_cfg = config["output"]
+    model_dir = Path(output_cfg["model_dir"])
+    if not model_dir.is_absolute():
+        model_dir = root / model_dir
+    model_dir = model_dir / folder_name
+
+    model_path = model_dir
+    metadata_path = model_dir / output_cfg.get("metadata_filename", "metadata.json")
+
+    if not model_path.exists() or not metadata_path.exists():
+        raise FileNotFoundError(
+            f"Artifacts for transformer model '{selected_model}' are missing at {model_dir}"
+        )
+
+    tokenizer = AutoTokenizer.from_pretrained(str(model_path))
+    model = AutoModelForSequenceClassification.from_pretrained(str(model_path))
+    model.eval()
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    return tokenizer, model, config, metadata
+
+
+def predict_transformer_text(
+    text: str,
+    tokenizer: Any,
+    model: Any,
+    preprocessing_config: dict[str, Any] | None = None,
+    max_sequence_length: int = 256,
+) -> PredictionResult:
+    """Classify one document using a HuggingFace transformer model."""
+    import torch
+
+    cleaned = preprocess_text(text, preprocessing_config)
+    
+    inputs = tokenizer(
+        cleaned,
+        truncation=True,
+        padding="max_length",
+        max_length=max_sequence_length,
+        return_tensors="pt",
+    )
+
+    with torch.no_grad():
+        outputs = model(**inputs)
+        logits = outputs.logits
+        probabilities = torch.softmax(logits, dim=1)[0].tolist()
+
+    label = 1 if probabilities[1] >= 0.5 else 0
+    result = PredictionResult(
+        label=label,
+        label_name=LABEL_MAP[label],
+        fake_probability=float(probabilities[1]),
+        real_probability=float(probabilities[0]),
+    )
+    logger.info("Transformer prediction complete", extra={"label": result.label_name})
+    return result
+

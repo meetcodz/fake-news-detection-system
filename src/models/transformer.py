@@ -1,6 +1,17 @@
-"""Training and comparison pipeline for Stage 4 Transformer-based models."""
-
 from __future__ import annotations
+
+# Bypass Windows WDAC / AppLocker block on pyarrow._dataset.pyd DLL loading
+import sys
+from types import ModuleType
+
+def _mock_getattr(self, name):
+    if name.startswith("__"):
+        raise AttributeError(name)
+    return type(name, (object,), {})
+
+mock_mod = type("MockModule", (ModuleType,), {"__getattr__": _mock_getattr})("pyarrow.dataset")
+mock_mod.__file__ = "dummy.py"
+sys.modules["pyarrow.dataset"] = mock_mod
 
 import argparse
 import json

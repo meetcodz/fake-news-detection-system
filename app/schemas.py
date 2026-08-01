@@ -22,9 +22,9 @@ class PredictionRequest(BaseModel):
         True,
         description="Whether to concatenate title and body text prior to classification.",
     )
-    model_type: Literal["classical", "deep_learning"] = Field(
+    model_type: Literal["classical", "deep_learning", "transformer"] = Field(
         "deep_learning",
-        description="Model architecture type to use ('classical' TF-IDF SVM or 'deep_learning' PyTorch GRU). Defaults to GRU.",
+        description="Model architecture type to use ('classical' TF-IDF SVM, 'deep_learning' PyTorch GRU, or 'transformer' HuggingFace DistilBERT). Defaults to GRU.",
     )
 
 
@@ -67,5 +67,13 @@ class PredictionResponse(BaseModel):
     model_type: str = Field(
         "classical",
         description="Model architecture type: 'classical' or 'deep_learning'.",
+    )
+    flagged_phrases: list[str] = Field(
+        default_factory=list,
+        description="Explainable AI output: Top words or phrases contributing to the model's prediction.",
+    )
+    evidence: list[dict] = Field(
+        default_factory=list,
+        description="Local RAG output: Factual evidence retrieved from the trusted knowledge base.",
     )
 

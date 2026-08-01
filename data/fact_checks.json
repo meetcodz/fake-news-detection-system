@@ -1,0 +1,26 @@
+[
+    {
+        "id": "fc-001",
+        "title": "NASA Confirms 15 Days of Darkness?",
+        "content": "A recurring viral rumor claims that NASA has confirmed the Earth will experience 15 days of total darkness due to an alignment between Venus and Jupiter. NASA Public Affairs has issued repeated statements denying this claim. The astronomical event described is physically impossible and has been formally rated false by independent fact-checkers across multiple recurrences since 2015.",
+        "source": "NASA & Snopes",
+        "url": "https://www.snopes.com/fact-check/15-days-darkness-november/",
+        "verdict": "False"
+    },
+    {
+        "id": "fc-002",
+        "title": "Drinking Bleach or Disinfectants Cures Viral Infections?",
+        "content": "Medical professionals and the World Health Organization strongly warn against injecting or ingesting bleach or disinfectants. These substances are highly toxic, can cause severe internal damage, and do not cure or prevent viral infections.",
+        "source": "World Health Organization",
+        "url": "https://www.who.int/emergencies/diseases/novel-coronavirus-2019/advice-for-public/myth-busters",
+        "verdict": "False"
+    },
+    {
+        "id": "fc-003",
+        "title": "5G Networks Cause Health Issues or Viruses?",
+        "content": "Extensive scientific research and international health organizations, including the WHO and ICNIRP, have confirmed that 5G networks are safe and do not cause or transmit biological viruses. Radio waves cannot transport viruses.",
+        "source": "Reuters Fact Check",
+        "url": "https://www.reuters.com/article/uk-factcheck-5g-idUSKBN22B26J",
+        "verdict": "False"
+    }
+]

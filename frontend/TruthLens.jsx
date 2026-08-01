@@ -89,21 +89,22 @@ function escapeRegExp(s) {
 /* ---------------------------------------------------------------
    HighlightedText Component (Context-Aware)
 --------------------------------------------------------------- */
-function HighlightedText({ text, active, animate }) {
-  const phrases = isNasaHoax(text) ? FLAGGED_PHRASES_NASA : CLICKBAIT_WORDS;
+function HighlightedText({ text, active, animate, phrases }) {
+  const activePhrases = isNasaHoax(text) ? FLAGGED_PHRASES_NASA : (phrases || []);
 
   const parts = useMemo(() => {
     if (!text) return [];
-    const pattern = new RegExp(`(${phrases.map(escapeRegExp).join("|")})`, "gi");
+    if (activePhrases.length === 0) return [text];
+    const pattern = new RegExp(`(${activePhrases.map(escapeRegExp).join("|")})`, "gi");
     return text.split(pattern);
-  }, [text, phrases]);
+  }, [text, activePhrases]);
 
   let markIndex = -1;
 
   return (
     <>
       {parts.map((part, i) => {
-        const isFlag = phrases.some((p) => p.toLowerCase() === part.toLowerCase());
+        const isFlag = activePhrases.some((p) => p.toLowerCase() === part.toLowerCase());
         if (!isFlag) return <React.Fragment key={i}>{part}</React.Fragment>;
         markIndex += 1;
         const delay = 0.35 + markIndex * 0.28;
@@ -309,7 +310,7 @@ function CheckView({
           <div className="relative p-5 md:p-6">
             {status === "scanning" && <div className="tl-scanline" />}
             <p className="tl-serif text-[17px] leading-[1.7]" style={{ color: "var(--ink)" }}>
-              <HighlightedText text={text} animate={status === "scanning"} active={status === "done"} />
+              <HighlightedText text={text} animate={status === "scanning"} active={status === "done"} phrases={result?.flagged_phrases} />
             </p>
           </div>
         )}
@@ -347,6 +348,7 @@ function CheckView({
               >
                 <option value="deep_learning">Deep Learning (GRU)</option>
                 <option value="classical">Classical (SVM)</option>
+                <option value="transformer">Transformer (DistilBERT)</option>
               </select>
             </div>
           )}
@@ -525,54 +527,25 @@ function DashboardView({ text, result, onBack }) {
     if (nasaMode) return SIGNALS_NASA;
 
     const list = [];
-    const lower = text.toLowerCase();
+    const phrases = result?.flagged_phrases || [];
 
-    const clicked = CLICKBAIT_WORDS.find((w) => lower.includes(w.toLowerCase()));
-    if (clicked) {
+    if (phrases.length === 0) {
       list.push({
-        phrase: clicked,
-        title: "Sensationalized framing",
-        detail: `The text includes the term "${clicked.toUpperCase()}" which is typically associated with attention-grabbing or emotional engagement patterns.`,
-      });
-    }
-
-    if (
-      !lower.includes("http") &&
-      !lower.includes("www") &&
-      !lower.includes(".org") &&
-      !lower.includes(".com")
-    ) {
-      list.push({
-        phrase: "No source citations",
-        title: "Lack of verifiable references",
-        detail:
-          "This text makes claims without linking to any authoritative sources, websites, or external databases.",
+        phrase: "No significant signals",
+        title: "Neutral terminology",
+        detail: "The model did not identify any strongly biased or indicative terminology.",
       });
     } else {
-      list.push({
-        phrase: "Contains external link references",
-        title: "Verifiable citations detected",
-        detail:
-          "The article references external web links, which can be checked against reliable domains for credibility.",
+      phrases.forEach((phrase) => {
+        list.push({
+          phrase: phrase,
+          title: isFake ? "Flagged as indicative of false patterns" : "Flagged as credible reporting",
+          detail: `The model's Explainable AI module identified the word/phrase "${phrase}" as highly influential in determining the final prediction.`,
+        });
       });
     }
 
-    if (confidence > 85) {
-      list.push({
-        phrase: "Strong statistical pattern match",
-        title: "Highly structured prediction",
-        detail: `Linguistic signatures match very closely with the model's training representations for ${labelName.toLowerCase()} articles.`,
-      });
-    } else {
-      list.push({
-        phrase: "Mixed styling markers",
-        title: "Balanced linguistic patterns",
-        detail:
-          "The writing style displays a mixture of factual indicators and subjective phrasing, reducing overall prediction certainty.",
-      });
-    }
-
-    if (result.model_tier === "headline") {
+    if (result?.model_tier === "headline") {
       list.push({
         phrase: "Headline-tier analysis",
         title: "Short statement evaluation",
@@ -589,7 +562,7 @@ function DashboardView({ text, result, onBack }) {
     }
 
     return list;
-  }, [text, nasaMode, confidence, labelName, result.model_tier]);
+  }, [nasaMode, result, isFake]);
 
   const breakdown = useMemo(() => {
     if (nasaMode) return MOCK_BREAKDOWN_NASA;
@@ -659,7 +632,7 @@ function DashboardView({ text, result, onBack }) {
             style={{ borderColor: "var(--rule)", background: "#FFFFFF" }}
           >
             <p className="tl-serif text-[16px] leading-[1.75]" style={{ color: "var(--ink)" }}>
-              <HighlightedText text={text} active animate={false} />
+              <HighlightedText text={text} active animate={false} phrases={result?.flagged_phrases} />
             </p>
           </div>
 

@@ -8,7 +8,16 @@ from fastapi.staticfiles import StaticFiles
 
 from app.schemas import PredictionRequest, PredictionResponse, ModelMetadata
 from src.data.clean import build_text_column
-from src.models.inference import load_model_artifacts, predict_text, load_deep_model_artifacts, predict_deep_text
+from src.explain.explain import explain_prediction
+from src.models.inference import (
+    load_model_artifacts,
+    predict_text,
+    load_deep_model_artifacts,
+    predict_deep_text,
+    load_transformer_model_artifacts,
+    predict_transformer_text,
+)
+from src.rag.retriever import LocalRAG
 
 # ---------------------------------------------------------------------------
 # Global state: two model tiers
@@ -18,6 +27,7 @@ from src.models.inference import load_model_artifacts, predict_text, load_deep_m
 _HEADLINE_THRESHOLD_CHARS = 200  # inputs shorter than this use the headline model
 
 model_state: dict = {}
+rag_engine: LocalRAG = LocalRAG()
 
 
 @asynccontextmanager
@@ -51,8 +61,27 @@ async def lifespan(app: FastAPI):
         except FileNotFoundError:
             # Handle case where deep model hasn't been trained yet
             model_state["deep_learning"] = None
+            
+        # Load the transformer model (DistilBERT)
+        try:
+            t_tok, t_model, t_cfg, t_meta = load_transformer_model_artifacts("configs/transformer.yaml", "distilbert-base-uncased")
+            model_state["transformer"] = {
+                "tokenizer": t_tok,
+                "model": t_model,
+                "config": t_cfg,
+                "metadata": t_meta,
+            }
+        except FileNotFoundError:
+            model_state["transformer"] = None
     except Exception as exc:
         raise RuntimeError(f"Failed to load model artifacts on startup: {exc}")
+
+    # Initialize the Local RAG evidence retriever
+    try:
+        rag_engine.add_documents_from_json("data/fact_checks.json")
+    except Exception as exc:
+        print(f"RAG initialization failed (non-fatal): {exc}")
+
     yield
     model_state.clear()
 
@@ -105,6 +134,7 @@ async def root():
     if not model_state:
         return {"status": "starting", "message": "Model artifacts loading..."}
     dl_state = model_state.get("deep_learning")
+    t_state = model_state.get("transformer")
     return {
         "status": "ready",
         "message": "TruthLens API is operational. Deep learning (GRU) is the default.",
@@ -112,6 +142,7 @@ async def root():
             "article": model_state["article"]["metadata"]["model_name"],
             "headline": model_state["headline"]["metadata"]["model_name"],
             "deep_learning": dl_state["metadata"]["model_name"] if dl_state else "not loaded",
+            "transformer": t_state["metadata"]["model_name"] if t_state else "not loaded",
         },
         "default_model": "deep_learning (GRU)",
         "routing": f"inputs < {_HEADLINE_THRESHOLD_CHARS} chars → headline model (SVM)",
@@ -165,6 +196,26 @@ async def predict(request: PredictionRequest):
             raise HTTPException(status_code=422, detail=str(val_err))
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+    elif request.model_type == "transformer":
+        state = model_state.get("transformer")
+        if state is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Transformer model (DistilBERT) is not trained or loaded.",
+            )
+        tier = "transformer"
+        try:
+            raw = predict_transformer_text(
+                text=text,
+                tokenizer=state["tokenizer"],
+                model=state["model"],
+                preprocessing_config=state["config"].get("preprocessing"),
+                max_sequence_length=state["config"].get("training", {}).get("max_sequence_length", 256),
+            )
+        except ValueError as val_err:
+            raise HTTPException(status_code=422, detail=str(val_err))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
     else:
         tier = _resolve_tier(text)
         state = model_state[tier]
@@ -192,6 +243,18 @@ async def predict(request: PredictionRequest):
         metrics=meta["metrics"],
     )
 
+    try:
+        flagged_phrases = explain_prediction(text, tier, state, label, top_k=5)
+    except Exception as exc:
+        print(f"Explanation failed: {exc}")
+        flagged_phrases = []
+
+    try:
+        evidence = rag_engine.retrieve(text, top_k=3)
+    except Exception as exc:
+        print(f"RAG retrieval failed: {exc}")
+        evidence = []
+
     return PredictionResponse(
         label=label,
         label_name=label_name,
@@ -200,5 +263,7 @@ async def predict(request: PredictionRequest):
         model_metadata=model_meta,
         model_tier=tier,
         model_type=request.model_type,
+        flagged_phrases=flagged_phrases,
+        evidence=evidence,
     )
 

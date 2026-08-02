@@ -90,7 +90,7 @@ function escapeRegExp(s) {
    HighlightedText Component (Context-Aware)
 --------------------------------------------------------------- */
 function HighlightedText({ text, active, animate, phrases }) {
-  const activePhrases = isNasaHoax(text) ? FLAGGED_PHRASES_NASA : (phrases || []);
+  const activePhrases = (phrases && phrases.length > 0) ? phrases : (isNasaHoax(text) ? FLAGGED_PHRASES_NASA : []);
 
   const parts = useMemo(() => {
     if (!text) return [];
@@ -521,20 +521,29 @@ function DashboardView({ text, result, onBack }) {
   );
   const borderColor = isFake ? "var(--false)" : isUncertain ? "var(--uncertain)" : "var(--trust)";
 
-  const nasaMode = isNasaHoax(text);
+  const hasEvidence = result.evidence && result.evidence.length > 0;
 
   const signals = useMemo(() => {
-    if (nasaMode) return SIGNALS_NASA;
-
     const list = [];
+
+    if (hasEvidence) {
+      list.push({
+        phrase: result.evidence[0].source || "Fact-check database",
+        title: "Verified Fact-Check Match",
+        detail: `This claim matches a known record in our trusted fact-checking database. Verdict: ${result.evidence[0].verdict}.`,
+      });
+    }
+
     const phrases = result?.flagged_phrases || [];
 
     if (phrases.length === 0) {
-      list.push({
-        phrase: "No significant signals",
-        title: "Neutral terminology",
-        detail: "The model did not identify any strongly biased or indicative terminology.",
-      });
+      if (!hasEvidence) {
+        list.push({
+          phrase: "No significant signals",
+          title: "Neutral terminology",
+          detail: "The model did not identify any strongly biased or indicative terminology.",
+        });
+      }
     } else {
       phrases.forEach((phrase) => {
         list.push({
@@ -562,10 +571,10 @@ function DashboardView({ text, result, onBack }) {
     }
 
     return list;
-  }, [nasaMode, result, isFake]);
+  }, [hasEvidence, result, isFake]);
 
   const breakdown = useMemo(() => {
-    if (nasaMode) return MOCK_BREAKDOWN_NASA;
+    if (hasEvidence) return MOCK_BREAKDOWN_NASA;
 
     const metrics = result.model_metadata.metrics || {};
     return [
@@ -573,7 +582,7 @@ function DashboardView({ text, result, onBack }) {
       { label: "F1 Score (Balanced)", value: Math.round((metrics.f1 || 0.94) * 100) },
       { label: "ROC-AUC (Discriminator)", value: Math.round((metrics.roc_auc || 0.99) * 100) },
     ];
-  }, [nasaMode, result.model_metadata]);
+  }, [hasEvidence, result.model_metadata]);
 
   const domainInfo = useMemo(() => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -679,7 +688,7 @@ function DashboardView({ text, result, onBack }) {
             className="tl-mono text-[11px] uppercase tracking-widest mb-3"
             style={{ color: "var(--ink-faint)" }}
           >
-            {nasaMode ? "Confidence breakdown" : "Model evaluation statistics"}
+            {hasEvidence ? "Confidence breakdown" : "Model evaluation statistics"}
           </h3>
           <div
             className="rounded-sm border p-5 mb-8"
@@ -714,46 +723,67 @@ function DashboardView({ text, result, onBack }) {
             className="tl-mono text-[11px] uppercase tracking-widest mb-3"
             style={{ color: "var(--ink-faint)" }}
           >
-            Source & Corpus Credibility
+            {hasEvidence ? "Fact-Check Evidence (RAG)" : "Source & Corpus Credibility"}
           </h3>
           <div
             className="rounded-sm border p-5"
             style={{ borderColor: "var(--rule)", background: "#FFFFFF" }}
           >
-            {nasaMode ? (
-              <>
-                <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--ink)" }}>
-                  NASA Public Affairs has issued repeated statements denying this claim. It has been
-                  formally rated false by independent fact-checkers across multiple recurrences
-                  since 2015.
-                </p>
-                <div
-                  className="mt-3 pt-3 border-t space-y-2 border-0 border-solid"
-                  style={{ borderColor: "var(--rule)" }}
-                >
-                  {[
-                    { text: "nasa.gov — no matching press release", url: "https://www.nasa.gov" },
-                    {
-                      text: "Snopes — rated False",
-                      url: "https://www.snopes.com/fact-check/15-days-darkness-november/",
-                    },
-                    { text: "FactCheck.org — rated False", url: "https://www.factcheck.org" },
-                  ].map((src, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-[12.5px]">
-                      <ExternalLink size={12} style={{ color: "var(--ink-faint)" }} />
-                      <a
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline text-[12.5px]"
-                        style={{ color: "var(--ink-soft)" }}
-                      >
-                        {src.text}
-                      </a>
+            {hasEvidence ? (
+              <div className="space-y-4">
+                {result.evidence.map((ev, i) => {
+                  const scorePercent = Math.round(ev.similarity_score * 100);
+                  const isFalseVerdict = ev.verdict?.toLowerCase() === "false";
+                  const verdictBg = isFalseVerdict ? "var(--false-bg)" : "var(--trust-bg)";
+                  const verdictColor = isFalseVerdict ? "var(--false)" : "var(--trust)";
+
+                  return (
+                    <div
+                      key={i}
+                      className={i > 0 ? "pt-4 border-t border-0 border-solid" : ""}
+                      style={{ borderColor: "var(--rule)" }}
+                    >
+                      <div className="flex justify-between items-start gap-2 mb-1.5">
+                        <h4
+                          className="text-[14px] font-semibold leading-tight"
+                          style={{ color: "var(--ink)" }}
+                        >
+                          {ev.title}
+                        </h4>
+                        <span
+                          className="tl-mono text-[10px] px-1.5 py-0.5 rounded-sm whitespace-nowrap"
+                          style={{ background: "var(--paper-deep)", color: "var(--ink-soft)" }}
+                        >
+                          Match: {scorePercent}%
+                        </span>
+                      </div>
+                      <p className="text-[13px] leading-relaxed mb-2" style={{ color: "var(--ink-soft)" }}>
+                        {ev.content}
+                      </p>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
+                        <span
+                          className="tl-mono text-[10.5px] px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: verdictBg, color: verdictColor }}
+                        >
+                          Verdict: {ev.verdict}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[12px]">
+                          <ExternalLink size={12} style={{ color: "var(--ink-faint)" }} />
+                          <a
+                            href={ev.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                            style={{ color: "var(--ink-soft)" }}
+                          >
+                            Source: {ev.source}
+                          </a>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </>
+                  );
+                })}
+              </div>
             ) : (
               <>
                 <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--ink)" }}>

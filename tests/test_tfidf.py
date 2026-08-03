@@ -1,12 +1,9 @@
-"""Tests for TF-IDF feature engineering."""
-
 from __future__ import annotations
 
 import pytest
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from src.features.tfidf import build_tfidf_vectorizer
-
 
 def test_build_tfidf_vectorizer_returns_configured_instance() -> None:
     config = {
@@ -23,7 +20,6 @@ def test_build_tfidf_vectorizer_returns_configured_instance() -> None:
     assert isinstance(vectorizer, TfidfVectorizer)
     assert vectorizer.max_features == 100
     assert vectorizer.ngram_range == (1, 2)
-
 
 def test_build_tfidf_vectorizer_rejects_unknown_type() -> None:
     with pytest.raises(ValueError, match="Unsupported feature type"):

@@ -1,5 +1,3 @@
-"""Unit tests for Stage 4 Transformer-based models and pipelines."""
-
 from __future__ import annotations
 
 import json
@@ -18,13 +16,11 @@ from src.models.transformer import (
 )
 from src.models.pipeline import SplitData
 
-
 def test_transformer_dataset() -> None:
-    """Test that TransformerDataset yields properly shaped token sequences."""
+                                                                              
     texts = ["First news article", "Second fake headline"]
     labels = [0, 1]
-    
-    # Mock tokenizer
+
     mock_tokenizer = MagicMock()
     mock_tokenizer.return_value = {
         "input_ids": torch.ones((1, 10), dtype=torch.long),
@@ -40,8 +36,7 @@ def test_transformer_dataset() -> None:
     assert "attention_mask" in item
     assert "labels" in item
     assert item["labels"].item() == 0
-    
-    # Check shape (squeeze should remove the batch dim)
+
     assert item["input_ids"].shape == (10,)
     assert item["attention_mask"].shape == (10,)
     mock_tokenizer.assert_called_with(
@@ -52,24 +47,20 @@ def test_transformer_dataset() -> None:
         return_tensors="pt",
     )
 
-
 def test_numpy_softmax() -> None:
-    """Test standard numpy softmax functionality."""
+                                                    
     logits = np.array([[1.0, 2.0], [3.0, 1.0]])
     probs = _numpy_softmax(logits)
-    
-    # Assert values sum to 1
+
     assert np.allclose(probs.sum(axis=-1), 1.0)
-    # Check directionality
+
     assert probs[0, 1] > probs[0, 0]
     assert probs[1, 0] > probs[1, 1]
 
-
 def test_compute_transformer_metrics() -> None:
-    """Test metric computation from raw logits."""
-    # Mock EvalPrediction
+
     eval_pred = MagicMock()
-    # Logits: class 0 has higher logit for index 0, class 1 has higher for index 1
+
     eval_pred.predictions = np.array([[2.0, 0.5], [0.1, 1.5]])
     eval_pred.label_ids = np.array([0, 1])
     
@@ -77,14 +68,12 @@ def test_compute_transformer_metrics() -> None:
     assert metrics["accuracy"] == 1.0
     assert metrics["f1"] == 1.0
 
-
 def test_train_transformer_classifier_dummy(
     tmp_path: Path,
     project_root: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify transformer training pipeline setup on mock objects."""
-    # Mock tokenizer and model
+
     mock_tokenizer = MagicMock()
     mock_model = MagicMock()
     
@@ -144,8 +133,7 @@ def test_train_transformer_classifier_dummy(
     
     assert result["model_name"] == "mock-transformer-model"
     assert result["metrics"]["accuracy"] == 0.9
-    
-    # Assert artifacts are written
+
     model_dir = tmp_path / "models" / "mock-transformer-model"
     assert (model_dir / "metadata.json").exists()
     assert (model_dir / "metrics.json").exists()

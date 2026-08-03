@@ -1,0 +1,54 @@
+[
+  {
+    "model_name": "logistic_regression",
+    "metrics": {
+      "accuracy": 0.3333333333333333,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "confusion_matrix": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "roc_auc": 0.5
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\logistic_regression\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\logistic_regression\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\logistic_regression\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\logistic_regression\\metadata.json"
+    }
+  },
+  {
+    "model_name": "naive_bayes",
+    "metrics": {
+      "accuracy": 0.6666666666666666,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "confusion_matrix": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "roc_auc": 0.5
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\naive_bayes\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\naive_bayes\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\naive_bayes\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\tmp_pytest\\test_compare_classical_models_0\\models\\naive_bayes\\metadata.json"
+    }
+  }
+]

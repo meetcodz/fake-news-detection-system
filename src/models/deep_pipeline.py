@@ -1,5 +1,3 @@
-"""GPU-aware training and comparison pipeline for Stage 3 sequence models."""
-
 from __future__ import annotations
 
 import copy
@@ -22,10 +20,8 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 class TextSequenceDataset(Dataset[tuple[Tensor, Tensor]]):
-    """Fixed-length token sequences paired with binary labels."""
-
+                                                                 
     def __init__(self, texts: list[str], labels: list[int], vocabulary: Vocabulary, max_length: int) -> None:
         self.token_ids = torch.tensor([vocabulary.encode(text, max_length) for text in texts], dtype=torch.long)
         self.labels = torch.tensor(labels, dtype=torch.long)
@@ -36,18 +32,15 @@ class TextSequenceDataset(Dataset[tuple[Tensor, Tensor]]):
     def __getitem__(self, index: int) -> tuple[Tensor, Tensor]:
         return self.token_ids[index], self.labels[index]
 
-
 @dataclass(frozen=True)
 class DeepDataLoaders:
-    """Train/test PyTorch data loaders fitted with one training vocabulary."""
-
+                                                                              
     train: DataLoader[tuple[Tensor, Tensor]]
     test: DataLoader[tuple[Tensor, Tensor]]
     vocabulary: Vocabulary
 
-
 def build_data_loaders(config: dict[str, Any], splits: SplitData) -> DeepDataLoaders:
-    """Create reproducible data loaders and fit vocabulary on training text only."""
+                                                                                    
     vocabulary_config = config["vocabulary"]
     training_config = config["training"]
     vocabulary = build_vocabulary(splits.train_texts, vocabulary_config)
@@ -63,7 +56,6 @@ def build_data_loaders(config: dict[str, Any], splits: SplitData) -> DeepDataLoa
         vocabulary=vocabulary,
     )
 
-
 def train_deep_classifier(
     config: dict[str, Any],
     root: Path,
@@ -72,7 +64,7 @@ def train_deep_classifier(
     loaders: DeepDataLoaders | None = None,
     splits: SplitData | None = None,
 ) -> dict[str, Any]:
-    """Train, evaluate, and persist one GPU-backed Stage 3 model."""
+                                                                    
     device = resolve_training_device(config["training"])
     splits = splits or load_split_data(config, root)
     loaders = loaders or build_data_loaders(config, splits)
@@ -104,7 +96,6 @@ def train_deep_classifier(
     artifacts = _save_deep_artifacts(config, root, model_name, model, loaders.vocabulary, metrics, history, model_config, device, splits)
     return {"model_name": model_name, "metrics": metrics, "history": history, "artifacts": artifacts}
 
-
 def _train_epoch(model: nn.Module, loader: DataLoader[tuple[Tensor, Tensor]], optimizer: AdamW, criterion: nn.Module, device: torch.device) -> float:
     model.train()
     total_loss = 0.0
@@ -117,7 +108,6 @@ def _train_epoch(model: nn.Module, loader: DataLoader[tuple[Tensor, Tensor]], op
         total_loss += float(loss.item()) * len(labels)
     return total_loss / len(loader.dataset)
 
-
 def _evaluate(model: nn.Module, loader: DataLoader[tuple[Tensor, Tensor]], device: torch.device) -> dict[str, Any]:
     model.eval()
     labels, predictions, probabilities = [], [], []
@@ -129,7 +119,6 @@ def _evaluate(model: nn.Module, loader: DataLoader[tuple[Tensor, Tensor]], devic
             predictions.extend(torch.argmax(logits, dim=1).cpu().tolist())
             labels.extend(batch_labels.tolist())
     return compute_binary_metrics(np.asarray(labels), np.asarray(predictions), np.asarray(probabilities))
-
 
 def _save_deep_artifacts(config: dict[str, Any], root: Path, model_name: str, model: nn.Module, vocabulary: Vocabulary, metrics: dict[str, Any], history: list[dict[str, Any]], model_config: dict[str, Any], device: torch.device, splits: SplitData) -> dict[str, str]:
     output_config = config["output"]

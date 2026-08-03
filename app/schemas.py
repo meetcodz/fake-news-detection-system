@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Literal
 from pydantic import BaseModel, Field
 
-
 class PredictionRequest(BaseModel):
     text: str = Field(
         ...,
@@ -27,13 +26,11 @@ class PredictionRequest(BaseModel):
         description="Model architecture type to use ('classical' TF-IDF SVM, 'deep_learning' PyTorch GRU, or 'transformer' HuggingFace DistilBERT). Defaults to GRU.",
     )
 
-
 class ModelMetadata(BaseModel):
     model_name: str = Field(..., description="Name of the deployed model.")
     trained_at_utc: str = Field(..., description="ISO 8601 timestamp of when the model was trained.")
     dataset: dict = Field(..., description="Information about the training dataset.")
     metrics: dict = Field(..., description="Held-out validation metrics (accuracy, precision, recall, F1, ROC-AUC).")
-
 
 class PredictionResponse(BaseModel):
     label: int = Field(
@@ -76,4 +73,3 @@ class PredictionResponse(BaseModel):
         default_factory=list,
         description="Local RAG output: Factual evidence retrieved from the trusted knowledge base.",
     )
-

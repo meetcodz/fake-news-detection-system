@@ -1,5 +1,3 @@
-"""Classical ML model factories for TF-IDF classification."""
-
 from __future__ import annotations
 
 from typing import Any, Callable
@@ -24,9 +22,8 @@ SUPPORTED_CLASSICAL_MODELS = (
     "xgboost",
 )
 
-
 def build_logistic_regression(config: dict[str, Any]) -> LogisticRegression:
-    """Create a logistic regression classifier."""
+                                                  
     return LogisticRegression(
         C=float(config.get("C", 1.0)),
         max_iter=int(config.get("max_iter", 1000)),
@@ -34,14 +31,12 @@ def build_logistic_regression(config: dict[str, Any]) -> LogisticRegression:
         random_state=config.get("random_state"),
     )
 
-
 def build_naive_bayes(config: dict[str, Any]) -> MultinomialNB:
-    """Create a multinomial naive Bayes classifier."""
+                                                      
     return MultinomialNB(alpha=float(config.get("alpha", 1.0)))
 
-
 def build_svm(config: dict[str, Any]) -> Any:
-    """Create a linear SVM, optionally calibrated for probability inference."""
+                                                                               
     estimator = LinearSVC(
         C=float(config.get("C", 1.0)),
         class_weight=config.get("class_weight"),
@@ -57,9 +52,8 @@ def build_svm(config: dict[str, Any]) -> Any:
         cv=int(config.get("calibration_cv", 5)),
     )
 
-
 def build_random_forest(config: dict[str, Any]) -> RandomForestClassifier:
-    """Create a random forest classifier."""
+                                            
     return RandomForestClassifier(
         n_estimators=int(config.get("n_estimators", 200)),
         max_depth=config.get("max_depth"),
@@ -68,9 +62,8 @@ def build_random_forest(config: dict[str, Any]) -> RandomForestClassifier:
         n_jobs=int(config.get("n_jobs", -1)),
     )
 
-
 def build_xgboost(config: dict[str, Any]) -> Any:
-    """Create an XGBoost classifier."""
+                                       
     try:
         from xgboost import XGBClassifier
     except ImportError as exc:
@@ -91,9 +84,8 @@ def build_xgboost(config: dict[str, Any]) -> Any:
         device=config.get("device", "cpu"),
     )
 
-
 def build_classical_model(model_name: str, config: dict[str, Any]) -> Any:
-    """Build a classical classifier by name."""
+                                               
     builders: dict[str, ClassifierBuilder] = {
         "logistic_regression": build_logistic_regression,
         "naive_bayes": build_naive_bayes,

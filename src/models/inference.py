@@ -1,5 +1,3 @@
-"""Model-agnostic inference utilities for persisted TF-IDF classifiers."""
-
 from __future__ import annotations
 
 import json
@@ -18,27 +16,19 @@ logger = get_logger(__name__)
 
 LABEL_MAP = {0: "real", 1: "fake"}
 
-
 @dataclass(frozen=True)
 class PredictionResult:
-    """Structured probability-based inference output for one document."""
-
+                                                                         
     label: int
     label_name: str
     fake_probability: float
     real_probability: float
 
-
 def load_model_artifacts(
     config_path: str | Path = "configs/classical.yaml",
     model_name: str | None = None,
 ) -> tuple[TfidfVectorizer, Any, dict[str, Any], dict[str, Any]]:
-    """Load a configured classical model, vectorizer, and training metadata.
 
-    When ``model_name`` is omitted, the ``deployment.model_name`` configuration
-    selects the serving model. Only classifiers exposing ``predict_proba`` can be
-    served because credibility scores must be calibrated probabilities.
-    """
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -75,11 +65,10 @@ def load_model_artifacts(
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     return vectorizer, classifier, config, metadata
 
-
 def load_baseline_artifacts(
     config_path: str | Path = "configs/baseline.yaml",
 ) -> tuple[TfidfVectorizer, Any, dict[str, Any]]:
-    """Load baseline artifacts while preserving the original public API."""
+                                                                           
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -96,14 +85,13 @@ def load_baseline_artifacts(
         raise FileNotFoundError("Model artifacts not found. Train the baseline first via src.models.train")
     return joblib.load(vectorizer_path), joblib.load(classifier_path), config
 
-
 def predict_text(
     text: str,
     vectorizer: TfidfVectorizer,
     classifier: Any,
     preprocessing_config: dict[str, Any] | None = None,
 ) -> PredictionResult:
-    """Classify one document with any probability-enabled binary classifier."""
+                                                                               
     if not hasattr(classifier, "predict_proba"):
         raise TypeError("Classifier must expose predict_proba for probability inference")
     cleaned = preprocess_text(text, preprocessing_config)
@@ -119,22 +107,20 @@ def predict_text(
     logger.info("Prediction complete", extra={"label": result.label_name})
     return result
 
-
 def predict_batch(
     texts: list[str],
     vectorizer: TfidfVectorizer,
     classifier: Any,
     preprocessing_config: dict[str, Any] | None = None,
 ) -> list[PredictionResult]:
-    """Classify multiple documents with any probability-enabled classifier."""
+                                                                              
     return [predict_text(text, vectorizer, classifier, preprocessing_config) for text in texts]
-
 
 def load_deep_model_artifacts(
     config_path: str | Path = "configs/deep_learning.yaml",
     model_name: str | None = None,
 ) -> tuple[Any, Any, dict[str, Any], dict[str, Any]]:
-    """Load a configured deep learning model (BiLSTM/GRU), vocabulary, config, and metadata."""
+                                                                                               
     from src.models.deep_learning import Vocabulary, build_deep_model
     import torch
 
@@ -162,15 +148,12 @@ def load_deep_model_artifacts(
             f"Artifacts for deep model '{selected_model}' are missing: {', '.join(map(str, missing))}"
         )
 
-    # Load vocabulary
     vocab_data = json.loads(vocabulary_path.read_text(encoding="utf-8"))
     vocabulary = Vocabulary(vocab_data)
 
-    # Load metadata and checkpoint
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
 
-    # Reconstruct model
     model = build_deep_model(
         model_name=selected_model,
         vocabulary_size=vocabulary.size,
@@ -181,7 +164,6 @@ def load_deep_model_artifacts(
 
     return vocabulary, model, config, metadata
 
-
 def predict_deep_text(
     text: str,
     vocabulary: Any,
@@ -189,11 +171,11 @@ def predict_deep_text(
     preprocessing_config: dict[str, Any] | None = None,
     max_sequence_length: int = 300,
 ) -> PredictionResult:
-    """Classify one document using a deep learning sequence classifier."""
+                                                                          
     import torch
 
     cleaned = preprocess_text(text, preprocessing_config)
-    # Encode text
+
     token_ids = vocabulary.encode(cleaned, max_length=max_sequence_length)
     token_tensor = torch.tensor([token_ids], dtype=torch.long)
 
@@ -211,12 +193,11 @@ def predict_deep_text(
     logger.info("Deep prediction complete", extra={"label": result.label_name})
     return result
 
-
 def load_transformer_model_artifacts(
     config_path: str | Path = "configs/transformer.yaml",
     model_name: str | None = None,
 ) -> tuple[Any, Any, dict[str, Any], dict[str, Any]]:
-    """Load a HuggingFace transformer model, tokenizer, config, and metadata."""
+                                                                                
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
     root = get_project_root()
@@ -249,7 +230,6 @@ def load_transformer_model_artifacts(
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     return tokenizer, model, config, metadata
 
-
 def predict_transformer_text(
     text: str,
     tokenizer: Any,
@@ -257,7 +237,7 @@ def predict_transformer_text(
     preprocessing_config: dict[str, Any] | None = None,
     max_sequence_length: int = 256,
 ) -> PredictionResult:
-    """Classify one document using a HuggingFace transformer model."""
+                                                                      
     import torch
 
     cleaned = preprocess_text(text, preprocessing_config)
@@ -284,4 +264,3 @@ def predict_transformer_text(
     )
     logger.info("Transformer prediction complete", extra={"label": result.label_name})
     return result
-

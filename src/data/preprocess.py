@@ -1,5 +1,3 @@
-"""Text preprocessing for news classification."""
-
 from __future__ import annotations
 
 import re
@@ -9,40 +7,29 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Matches wire-service datelines such as:
-#   "WASHINGTON (Reuters) - ", "NEW YORK (AP) - ", "LONDON (AFP) -"
-# These are source fingerprints, not content signals, and must be removed
-# before training so the model cannot cheat by recognising the news agency.
 _DATELINE_RE = re.compile(
     r"^[A-Z][A-Z\s/,\.]{1,40}\s*\([^)]{1,30}\)\s*[-–—]+\s*",
     re.MULTILINE,
 )
-# Also strip inline agency attribution tags like " | Reuters" or " - AP"
+
 _INLINE_SOURCE_RE = re.compile(r"\s*[|\-–]\ *(reuters|associated press|ap|afp|bbc|cnn|nyt|bloomberg)\b",
                                re.IGNORECASE)
 
-
 def strip_datelines(text: str) -> str:
-    """Remove wire-service datelines and inline source attributions from text.
 
-    This prevents the model from learning to recognise news agencies as a proxy
-    for credibility, forcing it to rely on actual content-based signals.
-    """
     text = _DATELINE_RE.sub("", text)
     text = _INLINE_SOURCE_RE.sub("", text)
     return text.strip()
 
-
 def preprocess_text(text: str, config: dict[str, Any] | None = None) -> str:
-    """Clean and normalize a single text document."""
+                                                     
     if not isinstance(text, str):
         raise TypeError(f"Expected str, got {type(text).__name__}")
 
     settings = config or {}
     
     cleaned = text
-    # Strip wire-service datelines BEFORE lowercasing so the regex can match
-    # uppercase city names (e.g. "WASHINGTON (Reuters) -").
+
     if settings.get("strip_datelines", True):
         cleaned = strip_datelines(cleaned)
     if settings.get("remove_urls", True):
@@ -61,22 +48,20 @@ def preprocess_text(text: str, config: dict[str, Any] | None = None) -> str:
 
     return cleaned
 
-
 def preprocess_corpus(
     texts: list[str],
     config: dict[str, Any] | None = None,
 ) -> list[str]:
-    """Preprocess a batch of documents, skipping invalid entries with logging."""
+                                                                                 
     processed, _ = preprocess_dataset(texts, labels=None, config=config)
     return processed
-
 
 def preprocess_dataset(
     texts: list[str],
     labels: list[int] | None = None,
     config: dict[str, Any] | None = None,
 ) -> tuple[list[str], list[int]] | tuple[list[str], None]:
-    """Preprocess documents while keeping texts and labels aligned."""
+                                                                      
     if labels is not None and len(texts) != len(labels):
         raise ValueError("texts and labels must have the same length")
 

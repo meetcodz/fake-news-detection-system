@@ -1,5 +1,3 @@
-"""Shared TF-IDF training pipeline."""
-
 from __future__ import annotations
 
 import json
@@ -19,38 +17,32 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 @dataclass(frozen=True)
 class SplitData:
-    """Train and test splits for text classification."""
-
+                                                        
     train_texts: list[str]
     test_texts: list[str]
     train_labels: list[int]
     test_labels: list[int]
 
-
 @dataclass(frozen=True)
 class TfidfFeatureSet:
-    """Fitted TF-IDF features shared across comparable models."""
-
+                                                                 
     vectorizer: Any
     x_train: Any
     x_test: Any
     train_labels: list[int]
     test_labels: list[int]
 
-
 def resolve_project_path(path: str | Path, root: Path) -> Path:
-    """Resolve a config path relative to the project root when needed."""
+                                                                         
     resolved = Path(path)
     if not resolved.is_absolute():
         resolved = root / resolved
     return resolved
 
-
 def load_split_data(config: dict[str, Any], root: Path) -> SplitData:
-    """Load, preprocess, and split the dataset defined in config."""
+                                                                    
     texts, labels = load_dataset_from_config(config["dataset"], root)
     processed_texts, processed_labels = preprocess_dataset(
         texts,
@@ -69,14 +61,8 @@ def load_split_data(config: dict[str, Any], root: Path) -> SplitData:
     )
     return SplitData(train_texts, test_texts, train_labels, test_labels)
 
-
 def deduplicate_examples(texts: list[str], labels: list[int]) -> tuple[list[str], list[int]]:
-    """Remove exact cleaned-text duplicates and ambiguous duplicate labels.
 
-    This prevents identical documents from leaking across a random train/test split.
-    Documents assigned conflicting labels are excluded because their ground truth is
-    ambiguous.
-    """
     if len(texts) != len(labels):
         raise ValueError("texts and labels must have the same length")
 
@@ -104,13 +90,12 @@ def deduplicate_examples(texts: list[str], labels: list[int]) -> tuple[list[str]
         raise ValueError("No documents remain after duplicate removal")
     return unique_texts, unique_labels
 
-
 def split_dataset(
     texts: list[str],
     labels: list[int],
     training_config: dict[str, Any],
 ) -> tuple[list[str], list[str], list[int], list[int]]:
-    """Split texts and labels into train and test sets."""
+                                                          
     test_size = float(training_config.get("test_size", 0.2))
     random_state = training_config.get("random_state", 42)
     stratify = labels if training_config.get("stratify", True) else None
@@ -123,12 +108,11 @@ def split_dataset(
         stratify=stratify,
     )
 
-
 def build_tfidf_features(
     config: dict[str, Any],
     splits: SplitData,
 ) -> TfidfFeatureSet:
-    """Fit a TF-IDF vectorizer once for model comparison."""
+                                                            
     vectorizer = build_tfidf_vectorizer(config["features"])
     x_train = vectorizer.fit_transform(splits.train_texts)
     x_test = vectorizer.transform(splits.test_texts)
@@ -148,7 +132,6 @@ def build_tfidf_features(
         test_labels=splits.test_labels,
     )
 
-
 def train_tfidf_classifier(
     config: dict[str, Any],
     root: Path,
@@ -160,7 +143,7 @@ def train_tfidf_classifier(
     features: TfidfFeatureSet | None = None,
     model_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Train a classifier on TF-IDF features and optionally persist artifacts."""
+                                                                                 
     if features is None:
         dataset_splits = splits or load_split_data(config, root)
         features = build_tfidf_features(config, dataset_splits)
@@ -200,9 +183,8 @@ def train_tfidf_classifier(
     )
     return result
 
-
 def _extract_positive_scores(classifier: Any, features: Any) -> list[float]:
-    """Return positive-class scores for ROC AUC computation."""
+                                                               
     if hasattr(classifier, "predict_proba"):
         return classifier.predict_proba(features)[:, 1].tolist()
     if hasattr(classifier, "decision_function"):
@@ -210,7 +192,6 @@ def _extract_positive_scores(classifier: Any, features: Any) -> list[float]:
     raise AttributeError(
         f"Classifier {type(classifier).__name__} lacks predict_proba/decision_function"
     )
-
 
 def _save_artifacts(
     vectorizer: Any,
@@ -223,7 +204,7 @@ def _save_artifacts(
     model_config: dict[str, Any] | None,
     features: TfidfFeatureSet,
 ) -> dict[str, str]:
-    """Persist model artifacts and evaluation metrics to disk."""
+                                                                 
     output_cfg = config["output"]
     model_dir = Path(output_dir) if output_dir else Path(output_cfg["model_dir"])
     if not model_dir.is_absolute():

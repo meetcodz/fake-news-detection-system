@@ -1,4 +1,3 @@
-"""Threshold tuning: find optimal fake_probability threshold for headline model."""
 from src.models.inference import load_model_artifacts, predict_text
 
 HEADLINES = [
@@ -16,7 +15,6 @@ HEADLINES = [
     ("fake", "This shocking video proves mainstream media has been LYING to you."),
 ]
 
-
 def evaluate(threshold: float, vec, clf, preproc) -> int:
     correct = 0
     for expected, headline in HEADLINES:
@@ -25,7 +23,6 @@ def evaluate(threshold: float, vec, clf, preproc) -> int:
         if predicted == expected:
             correct += 1
     return correct
-
 
 def main():
     vec, clf, cfg, _ = load_model_artifacts("configs/headline.yaml")
@@ -42,7 +39,7 @@ def main():
     print(f"\nBest threshold: {best_threshold}  ({best_score}/{len(HEADLINES)} correct)")
     print()
 
-    # Show predictions at best threshold
+    \
     print(f"{'EXPECTED':6s}  {'PREDICTED':6s}  {'FAKE%':6s}  HEADLINE")
     print("-" * 90)
     for expected, headline in HEADLINES:
@@ -50,7 +47,6 @@ def main():
         predicted = "fake" if r.fake_probability > best_threshold else "real"
         ok = "OK" if predicted == expected else "WRONG"
         print(f"{expected:6s}  {predicted:6s}  {r.fake_probability * 100:5.1f}%  [{ok}]  {headline[:60]}")
-
 
 if __name__ == "__main__":
     main()

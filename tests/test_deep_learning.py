@@ -1,12 +1,9 @@
-"""Unit tests for Stage 3 vocabulary and recurrent model factories."""
-
 from __future__ import annotations
 
 import pytest
 import torch
 
 from src.models.deep_learning import build_deep_model, build_vocabulary, resolve_training_device
-
 
 def test_build_vocabulary_encodes_unknown_tokens() -> None:
     vocabulary = build_vocabulary(["reliable news report", "news update"], {"max_size": 10, "min_frequency": 1})
@@ -18,7 +15,6 @@ def test_build_vocabulary_encodes_unknown_tokens() -> None:
     assert encoded[1] == vocabulary.token_to_id["news"]
     assert encoded[-1] == vocabulary.pad_id
 
-
 @pytest.mark.parametrize("model_name", ["bilstm", "gru"])
 def test_deep_models_return_binary_logits(model_name: str) -> None:
     model = build_deep_model(model_name, 20, {"embedding_dim": 8, "hidden_dim": 4, "num_layers": 1, "dropout": 0.0, "bidirectional": True})
@@ -27,13 +23,11 @@ def test_deep_models_return_binary_logits(model_name: str) -> None:
 
     assert logits.shape == (2, 2)
 
-
 def test_cuda_requirement_fails_without_cuda(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
 
     with pytest.raises(RuntimeError, match="CUDA was requested"):
         resolve_training_device({"device": "cuda"})
-
 
 def test_train_deep_classifier_produces_artifacts(
     tmp_path,
@@ -41,7 +35,6 @@ def test_train_deep_classifier_produces_artifacts(
 ) -> None:
     from src.models.deep_pipeline import train_deep_classifier
 
-    # Define minimal config for CPU-based recurrent model training test
     config = {
         "dataset": {
             "path": str(project_root / "data/sample/sample_news.csv"),
@@ -101,16 +94,14 @@ def test_train_deep_classifier_produces_artifacts(
     assert "history" in result
     assert "artifacts" in result
 
-    # Check that output files exist
     model_dir = tmp_path / "models" / "bilstm"
     assert (model_dir / "model.pt").exists()
     assert (model_dir / "vocabulary.json").exists()
     assert (model_dir / "metrics.json").exists()
     assert (model_dir / "metadata.json").exists()
 
-
 def test_deep_model_inference(project_root) -> None:
-    """Verify that we can load a trained deep learning model and run predictions."""
+                                                                                    
     from src.models.inference import load_deep_model_artifacts, predict_deep_text
 
     try:
@@ -134,5 +125,3 @@ def test_deep_model_inference(project_root) -> None:
     assert 0.0 <= res.fake_probability <= 1.0
     assert 0.0 <= res.real_probability <= 1.0
     assert pytest.approx(res.fake_probability + res.real_probability) == 1.0
-
-

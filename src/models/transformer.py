@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-# Bypass Windows WDAC / AppLocker block on pyarrow._dataset.pyd DLL loading
 import sys
 from types import ModuleType
 
@@ -43,9 +42,8 @@ logger = get_logger(__name__)
 
 _CHECKPOINT_JUNK = {"optimizer.pt", "scheduler.pt", "rng_state.pth"}
 
-
 def _cleanup_training_checkpoints(checkpoint_dir: Path) -> None:
-    """Delete large optimizer/scheduler/rng files that are useless after training."""
+                                                                                     
     if not checkpoint_dir.exists():
         return
     for path in checkpoint_dir.rglob("*"):
@@ -53,10 +51,8 @@ def _cleanup_training_checkpoints(checkpoint_dir: Path) -> None:
             path.unlink(missing_ok=True)
             logger.info("Removed training checkpoint file: %s", path.name)
 
-
 class TransformerDataset(Dataset):
-    """PyTorch Dataset wrapping tokenizer encoding for sequence classification."""
-
+                                                                                  
     def __init__(
         self,
         texts: list[str],
@@ -85,19 +81,13 @@ class TransformerDataset(Dataset):
             item["labels"] = torch.tensor(self.labels[index], dtype=torch.long)
         return item
 
-
 def _numpy_softmax(x: np.ndarray) -> np.ndarray:
-    """Compute softmax probabilities along the last axis in NumPy."""
+                                                                     
     e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
     return e_x / e_x.sum(axis=-1, keepdims=True)
 
-
 def compute_transformer_metrics(eval_pred: EvalPrediction) -> dict[str, Any]:
-    """Compute standard binary metrics from transformer evaluation predictions.
 
-    Guards against NaN logits that can occur during early DeBERTa training steps.
-    When NaNs are present, ROC-AUC is skipped for that checkpoint.
-    """
     logits, labels = eval_pred.predictions, eval_pred.label_ids
     if isinstance(logits, tuple):
         logits = logits[0]
@@ -105,12 +95,11 @@ def compute_transformer_metrics(eval_pred: EvalPrediction) -> dict[str, Any]:
     probs: np.ndarray | None = None
     if logits.ndim == 2 and logits.shape[1] == 2:
         raw_probs = _numpy_softmax(logits)[:, 1]
-        # Skip probability-based metrics if logits produced NaN (numerical instability)
+
         probs = raw_probs if not np.isnan(raw_probs).any() else None
         if probs is None:
             logger.warning("NaN probabilities detected in eval logits — ROC-AUC skipped for this checkpoint")
     return compute_binary_metrics(labels, preds, probs)
-
 
 def train_transformer_classifier(
     config: dict[str, Any],
@@ -118,39 +107,32 @@ def train_transformer_classifier(
     model_name: str,
     splits: SplitData,
 ) -> dict[str, Any]:
-    """Fine-tune, evaluate, and save a HuggingFace transformer model."""
+                                                                        
     output_cfg = config["output"]
     training_cfg = config["training"]
-    
-    # Path resolution
+
     model_dir = resolve_project_path(output_cfg["model_dir"], root) / model_name.replace("/", "_")
     model_dir.mkdir(parents=True, exist_ok=True)
     
     logger.info("Initializing tokenizer and model: %s", model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
-    
-    # Build datasets
+
     max_len = int(training_cfg.get("max_sequence_length", 256))
     train_dataset = TransformerDataset(splits.train_texts, splits.train_labels, tokenizer, max_len)
     val_dataset = TransformerDataset(splits.test_texts, splits.test_labels, tokenizer, max_len)
-    
-    # Resolve training device and mixed precision
+
     device_name = str(training_cfg.get("device", "auto")).lower()
     use_cpu = device_name == "cpu" or (device_name == "auto" and not torch.cuda.is_available())
     gpu_available = torch.cuda.is_available() and not use_cpu
 
-    # Prefer bf16 (numerically stable, works on Ampere+) over fp16 for transformers;
-    # fall back to fp16 only if bf16 is not supported; use neither on CPU.
     bf16 = gpu_available and bool(training_cfg.get("bf16", False)) and torch.cuda.is_bf16_supported()
     fp16 = gpu_available and bool(training_cfg.get("fp16", False))
 
-    # Compute warmup steps from ratio so we don't use the deprecated warmup_ratio arg
     steps_per_epoch = max(1, len(train_dataset) // int(training_cfg.get("batch_size", 16)))
     total_steps = steps_per_epoch * int(training_cfg.get("epochs", 3))
     warmup_steps = int(total_steps * float(training_cfg.get("warmup_ratio", 0.1)))
 
-    # Setup training arguments
     args = TrainingArguments(
         output_dir=str(model_dir / "checkpoints"),
         eval_strategy="epoch",
@@ -185,23 +167,18 @@ def train_transformer_classifier(
     
     logger.info("Starting fine-tuning for model: %s", model_name)
     trainer.train()
-    
-    # Remove optimizer/scheduler/rng checkpoints immediately — they're large and
-    # not needed after training completes.
+
     _cleanup_training_checkpoints(model_dir / "checkpoints")
-    
-    # Save best model and tokenizer
+
     trainer.save_model(str(model_dir))
     try:
         tokenizer.save_pretrained(str(model_dir))
     except OSError as exc:
-        # Non-fatal: the tokenizer is already cached in the HuggingFace hub cache.
+
         logger.warning("Tokenizer save skipped (likely low disk): %s", exc)
     
-    # Evaluate best model
     eval_results = trainer.evaluate()
-    
-    # Adapt metrics keys to fit classical structure
+
     metrics = {
         "accuracy": eval_results["eval_accuracy"],
         "precision": eval_results["eval_precision"],
@@ -209,8 +186,7 @@ def train_transformer_classifier(
         "f1": eval_results["eval_f1"],
         "roc_auc": eval_results.get("eval_roc_auc"),
     }
-    
-    # Save metadata
+
     metadata_path = model_dir / output_cfg.get("metadata_filename", "metadata.json")
     metadata = {
         "model_name": model_name,
@@ -226,8 +202,7 @@ def train_transformer_classifier(
         "metrics": metrics,
     }
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-    
-    # Save metrics.json
+
     metrics_path = model_dir / output_cfg.get("metrics_filename", "metrics.json")
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     
@@ -241,9 +216,8 @@ def train_transformer_classifier(
         },
     }
 
-
 def compare_transformer_models(config_path: str | Path = "configs/transformer.yaml") -> pd.DataFrame:
-    """Run Stage 4 comparison on transformer models."""
+                                                       
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -253,8 +227,7 @@ def compare_transformer_models(config_path: str | Path = "configs/transformer.ya
     setup_logging(config)
     
     splits = load_split_data(config, root)
-    
-    # Subsampling logic for developer testing / sanity check runs
+
     max_samples = config["dataset"].get("max_samples")
     if max_samples is not None:
         max_samples = int(max_samples)
@@ -317,9 +290,8 @@ def compare_transformer_models(config_path: str | Path = "configs/transformer.ya
     logger.info("Transformer comparison complete. Models compared: %d", len(comparison))
     return comparison
 
-
 def main() -> None:
-    """CLI entrypoint to run transformer comparison."""
+                                                       
     parser = argparse.ArgumentParser(description="Stage 4 Transformer training and comparison.")
     parser.add_argument(
         "--config",
@@ -328,7 +300,6 @@ def main() -> None:
     )
     args = parser.parse_args()
     compare_transformer_models(args.config)
-
 
 if __name__ == "__main__":
     main()

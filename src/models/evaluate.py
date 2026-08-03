@@ -1,5 +1,3 @@
-"""Model evaluation metrics for binary classification."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -18,22 +16,12 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 def compute_binary_metrics(
     y_true: list[int] | np.ndarray,
     y_pred: list[int] | np.ndarray,
     y_proba: list[float] | np.ndarray | None = None,
 ) -> dict[str, Any]:
-    """Compute standard binary classification metrics.
 
-    Args:
-        y_true: Ground-truth labels.
-        y_pred: Predicted labels.
-        y_proba: Optional predicted probabilities for the positive class.
-
-    Returns:
-        Dictionary of metric names to scalar values or nested structures.
-    """
     labels = np.asarray(y_true)
     predictions = np.asarray(y_pred)
 

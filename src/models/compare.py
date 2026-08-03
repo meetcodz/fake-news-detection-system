@@ -1,5 +1,3 @@
-"""Compare classical models using a shared TF-IDF pipeline."""
-
 from __future__ import annotations
 
 import gc
@@ -21,13 +19,8 @@ from utils.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
-
 def compare_classical_models(config_path: str | Path) -> pd.DataFrame:
-    """Train and evaluate all configured classical models on the same split.
 
-    Returns:
-        DataFrame sorted by F1 score (descending).
-    """
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -86,14 +79,13 @@ def compare_classical_models(config_path: str | Path) -> pd.DataFrame:
     logger.info("Classical model comparison complete", extra={"models": len(comparison)})
     return comparison
 
-
 def _save_comparison(
     comparison: pd.DataFrame,
     detailed_results: list[dict[str, Any]],
     config: dict[str, Any],
     root: Path,
 ) -> None:
-    """Persist comparison table and detailed metrics."""
+                                                        
     output_dir = resolve_project_path(config["output"]["model_dir"], root)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -112,9 +104,8 @@ def _save_comparison(
         encoding="utf-8",
     )
 
-
 def main() -> None:
-    """CLI entry point for classical model comparison."""
+                                                         
     import argparse
 
     parser = argparse.ArgumentParser(description="Train and compare classical models.")
@@ -125,7 +116,6 @@ def main() -> None:
     )
     args = parser.parse_args()
     compare_classical_models(args.config)
-
 
 if __name__ == "__main__":
     main()

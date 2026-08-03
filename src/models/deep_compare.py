@@ -1,5 +1,3 @@
-"""CLI comparison runner for Stage 3 BiLSTM and GRU models."""
-
 from __future__ import annotations
 
 import json
@@ -17,9 +15,8 @@ from utils.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
-
 def compare_deep_models(config_path: str | Path = "configs/deep_learning.yaml") -> pd.DataFrame:
-    """Train configured Stage 3 models on one shared split and vocabulary."""
+                                                                             
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -54,18 +51,15 @@ def compare_deep_models(config_path: str | Path = "configs/deep_learning.yaml") 
     logger.info("Deep model comparison complete", extra={"models": len(comparison)})
     return comparison
 
-
 def _set_seed(seed: int) -> None:
-    """Seed PyTorch randomness for repeatable Stage 3 experiments."""
+                                                                     
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-
 def main() -> None:
-    """Run the Stage 3 comparison using the default configuration."""
+                                                                     
     compare_deep_models()
-
 
 if __name__ == "__main__":
     main()

@@ -1,11 +1,8 @@
-"""Explainable AI (XAI) module for extracting prediction rationales."""
-
 import numpy as np
 from typing import Any
 
-
 def explain_classical(text: str, vectorizer: Any, classifier: Any, prediction_label: int, top_k: int = 5) -> list[str]:
-    """Extract top important words using TF-IDF feature weights and classifier coefficients."""
+                                                                                               
     if not hasattr(classifier, "coef_"):
         return []
         
@@ -20,18 +17,17 @@ def explain_classical(text: str, vectorizer: Any, classifier: Any, prediction_la
     text_coefs = coefs[non_zero_indices]
     
     if prediction_label == 1:
-        # Fake -> highest positive coefficients
+
         sorted_indices = non_zero_indices[np.argsort(text_coefs)[::-1]]
     else:
-        # Real -> highest negative coefficients
+
         sorted_indices = non_zero_indices[np.argsort(text_coefs)]
         
     top_indices = sorted_indices[:top_k]
     return [feature_names[idx] for idx in top_indices]
 
-
 def _compute_saliency(model: Any, inputs: dict[str, Any], embedding_layer: Any, prediction_label: int, tokens: list[str], top_k: int) -> list[str]:
-    """Generic PyTorch gradient saliency extractor."""
+                                                      
     import torch
     
     embeddings_list = []
@@ -45,10 +41,10 @@ def _compute_saliency(model: Any, inputs: dict[str, Any], embedding_layer: Any, 
     model.zero_grad()
     
     if "token_ids" in inputs:
-        # For our custom RNN
+
         logits = model(inputs["token_ids"])
     else:
-        # For HuggingFace Transformer
+
         outputs = model(**inputs)
         logits = outputs.logits
         
@@ -59,7 +55,7 @@ def _compute_saliency(model: Any, inputs: dict[str, Any], embedding_layer: Any, 
     if not embeddings_list or embeddings_list[0].grad is None:
         return []
         
-    gradients = embeddings_list[0].grad[0] # (seq_len, embedding_dim)
+    gradients = embeddings_list[0].grad[0]\
     saliency = torch.norm(gradients, dim=1).cpu().numpy()
     
     seq_len = min(len(tokens), len(saliency))
@@ -82,9 +78,8 @@ def _compute_saliency(model: Any, inputs: dict[str, Any], embedding_layer: Any, 
             
     return flagged
 
-
 def explain_deep_learning(text: str, vocabulary: Any, model: Any, prediction_label: int, top_k: int = 5, max_length: int = 300) -> list[str]:
-    """Extract top important words using PyTorch gradient saliency on the GRU embedding layer."""
+                                                                                                 
     import torch
     from src.data.preprocess import preprocess_text
     
@@ -99,9 +94,8 @@ def explain_deep_learning(text: str, vocabulary: Any, model: Any, prediction_lab
     inputs = {"token_ids": torch.tensor([token_ids], dtype=torch.long)}
     return _compute_saliency(model, inputs, model.embedding, prediction_label, tokens, top_k)
 
-
 def explain_transformer(text: str, tokenizer: Any, model: Any, prediction_label: int, top_k: int = 5, max_length: int = 256) -> list[str]:
-    """Extract top important words using PyTorch gradient saliency on HuggingFace transformer embeddings."""
+                                                                                                            
     import torch
     from src.data.preprocess import preprocess_text
     
@@ -121,7 +115,6 @@ def explain_transformer(text: str, tokenizer: Any, model: Any, prediction_label:
     
     return _compute_saliency(model, inputs, model.get_input_embeddings(), prediction_label, tokens, top_k)
 
-
 def explain_prediction(
     text: str,
     tier: str,
@@ -129,7 +122,7 @@ def explain_prediction(
     prediction_label: int,
     top_k: int = 5
 ) -> list[str]:
-    """Generic wrapper that routes to the correct explain function."""
+                                                                      
     if tier == "transformer":
         return explain_transformer(
             text=text,

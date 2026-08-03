@@ -7,18 +7,15 @@ from src.models.inference import load_baseline_artifacts, predict_text
 from src.models.train import train_baseline
 from utils.config import load_config
 
-
 @pytest.fixture
 def training_config_path(tmp_path, project_root) -> Path:
-    """Write a temporary config that stores artifacts under tmp_path."""
+                                                                        
     base_config = load_config(project_root / "configs/baseline.yaml")
-    
-    # Run on mock/sample dataset to ensure fast test execution
+
     base_config["dataset"]["path"] = str(project_root / "data/sample/sample_news.csv")
     base_config["dataset"]["title_column"] = None
     base_config["dataset"]["combine_title_text"] = False
-    
-    # Set min_df to 1 so that features are not pruned on the tiny dataset
+
     base_config["features"]["min_df"] = 1
     
     base_config["output"]["model_dir"] = str(tmp_path / "models")
@@ -27,7 +24,6 @@ def training_config_path(tmp_path, project_root) -> Path:
     with open(config_path, "w") as f:
         json.dump(base_config, f, indent=2)
     return config_path
-
 
 def test_train_baseline_produces_metrics_and_artifacts(
     training_config_path,
@@ -47,7 +43,6 @@ def test_train_baseline_produces_metrics_and_artifacts(
     metadata = json.loads(Path(result["artifacts"]["metadata"]).read_text())
     assert metadata["dataset"]["version"] == "WELFake_Dataset.csv"
     assert metadata["model_config"]["name"] == "logistic_regression"
-
 
 def test_predict_text_after_training(training_config_path) -> None:
     train_baseline(training_config_path)

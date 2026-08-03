@@ -1,5 +1,3 @@
-"""Baseline model training orchestration."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,9 +10,8 @@ from utils.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
-
 def train_baseline(config_path: str | Path) -> dict[str, Any]:
-    """Train a TF-IDF + logistic regression baseline and persist artifacts."""
+                                                                              
     root = get_project_root()
     config_file = Path(config_path)
     if not config_file.is_absolute():
@@ -37,11 +34,9 @@ def train_baseline(config_path: str | Path) -> dict[str, Any]:
     logger.info("Baseline training complete", extra={"f1": result["metrics"]["f1"]})
     return result
 
-
 def main() -> None:
-    """CLI entry point for baseline training."""
+                                                
     train_baseline("configs/baseline.yaml")
-
 
 if __name__ == "__main__":
     main()

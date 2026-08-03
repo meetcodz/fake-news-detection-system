@@ -1,5 +1,3 @@
-"""TF-IDF feature engineering."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -10,16 +8,8 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 def build_tfidf_vectorizer(config: dict[str, Any]) -> TfidfVectorizer:
-    """Create a configured TF-IDF vectorizer from a feature config mapping.
 
-    Args:
-        config: Feature configuration (typically ``config['features']``).
-
-    Returns:
-        Unfitted ``TfidfVectorizer`` instance.
-    """
     feature_type = config.get("type", "tfidf")
     if feature_type != "tfidf":
         raise ValueError(f"Unsupported feature type: {feature_type}")

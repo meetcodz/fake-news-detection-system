@@ -10,7 +10,7 @@ def build_text_column(
     title_column: str | None = None,
     combine_title_text: bool = False,
 ) -> pd.Series:
-    """Build the document text column, optionally combining title and body."""
+                                                                              
     if not isinstance(frame, pd.DataFrame):
         raise TypeError("Expected a pandas DataFrame")
     
@@ -29,13 +29,12 @@ def build_text_column(
 
     return text
 
-
 def drop_invalid_rows(
     frame: pd.DataFrame,
     text_column: str,
     label_column: str,
 ) -> pd.DataFrame:
-    """Remove rows with empty text or missing labels."""
+                                                        
     if not isinstance(frame, pd.DataFrame):
         raise TypeError("Expected a pandas DataFrame")
     

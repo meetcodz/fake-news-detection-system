@@ -19,20 +19,13 @@ from src.models.inference import (
 )
 from src.rag.retriever import LocalRAG
 
-# ---------------------------------------------------------------------------
-# Global state: two model tiers
-#   "headline" — trained on article titles only; accurate for short inputs
-#   "article"  — trained on full text + titles; accurate for long documents
-# ---------------------------------------------------------------------------
-_HEADLINE_THRESHOLD_CHARS = 200  # inputs shorter than this use the headline model
+_HEADLINE_THRESHOLD_CHARS = 200
 
 model_state: dict = {}
 rag_engine: LocalRAG = LocalRAG()
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load both model tiers at startup to avoid per-request latency."""
     try:
         a_vec, a_clf, a_cfg, a_meta = load_model_artifacts("configs/classical.yaml")
         h_vec, h_clf, h_cfg, h_meta = load_model_artifacts("configs/headline.yaml")
@@ -48,8 +41,7 @@ async def lifespan(app: FastAPI):
             "config": h_cfg,
             "metadata": h_meta,
         }
-        
-        # Load the deep learning model (GRU)
+
         try:
             d_vocab, d_model, d_cfg, d_meta = load_deep_model_artifacts("configs/deep_learning.yaml", "gru")
             model_state["deep_learning"] = {
@@ -59,10 +51,8 @@ async def lifespan(app: FastAPI):
                 "metadata": d_meta,
             }
         except FileNotFoundError:
-            # Handle case where deep model hasn't been trained yet
             model_state["deep_learning"] = None
-            
-        # Load the transformer model (DistilBERT)
+
         try:
             t_tok, t_model, t_cfg, t_meta = load_transformer_model_artifacts("configs/transformer.yaml", "distilbert-base-uncased")
             model_state["transformer"] = {
@@ -76,7 +66,6 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         raise RuntimeError(f"Failed to load model artifacts on startup: {exc}")
 
-    # Initialize the Local RAG evidence retriever
     try:
         rag_engine.add_documents_from_json("data/fact_checks.json")
     except Exception as exc:
@@ -84,8 +73,6 @@ async def lifespan(app: FastAPI):
 
     yield
     model_state.clear()
-
-
 
 app = FastAPI(
     title="TruthLens Misinformation Detection API",
@@ -106,17 +93,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve the React frontend built as static HTML/JSX
 app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
 
-
 def _resolve_tier(text: str) -> Literal["headline", "article"]:
-    """Pick the appropriate model tier based on input length."""
     return "headline" if len(text.strip()) < _HEADLINE_THRESHOLD_CHARS else "article"
 
-
 def _apply_threshold(fake_prob: float, deployment_cfg: dict) -> tuple[int, str]:
-    """Apply a configurable threshold and uncertain-band logic to raw probability."""
     threshold = float(deployment_cfg.get("fake_threshold", 0.50))
     band = deployment_cfg.get("uncertain_band", [])
     if band and len(band) == 2:
@@ -127,10 +109,8 @@ def _apply_threshold(fake_prob: float, deployment_cfg: dict) -> tuple[int, str]:
         return 1, "fake"
     return 0, "real"
 
-
 @app.get("/")
 async def root():
-    """Health check — shows operational status and loaded model names."""
     if not model_state:
         return {"status": "starting", "message": "Model artifacts loading..."}
     dl_state = model_state.get("deep_learning")
@@ -148,21 +128,8 @@ async def root():
         "routing": f"inputs < {_HEADLINE_THRESHOLD_CHARS} chars → headline model (SVM)",
     }
 
-
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
-    """Classify a news headline or article body as real, fake, or uncertain.
-
-    The API automatically selects the best-suited model tier:
-    - **Headline model**: used when input is < 200 characters (title-length)
-    - **Article model**: used for longer, full-article inputs
-
-    Alternatively, users can specify ``model_type="deep_learning"`` to route the prediction
-    through the trained PyTorch sequence model.
-
-    Predictions in the 35–65% probability band are returned as ``uncertain``
-    to avoid overconfident wrong answers on genuinely ambiguous text.
-    """
     if not model_state:
         raise HTTPException(
             status_code=503,
@@ -266,4 +233,3 @@ async def predict(request: PredictionRequest):
         flagged_phrases=flagged_phrases,
         evidence=evidence,
     )
-

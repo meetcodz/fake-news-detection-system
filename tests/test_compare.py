@@ -1,5 +1,3 @@
-"""Tests for classical model comparison."""
-
 from __future__ import annotations
 
 import json
@@ -13,7 +11,6 @@ from src.models.classical import build_classical_model
 from src.models.compare import compare_classical_models
 from src.models.pipeline import deduplicate_examples
 
-
 def test_build_classical_model_supports_core_estimators() -> None:
     logistic = build_classical_model("logistic_regression", {"C": 1.0})
     naive_bayes = build_classical_model("naive_bayes", {"alpha": 0.5})
@@ -21,12 +18,10 @@ def test_build_classical_model_supports_core_estimators() -> None:
     assert logistic.__class__.__name__ == "LogisticRegression"
     assert naive_bayes.__class__.__name__ == "MultinomialNB"
 
-
 def test_build_classical_model_can_calibrate_svm() -> None:
     classifier = build_classical_model("svm", {"calibrate": True, "calibration_cv": 2})
 
     assert isinstance(classifier, CalibratedClassifierCV)
-
 
 def test_deduplicate_examples_removes_conflicts_and_repeats() -> None:
     texts, labels = deduplicate_examples(
@@ -37,20 +32,17 @@ def test_deduplicate_examples_removes_conflicts_and_repeats() -> None:
     assert texts == ["same", "unique"]
     assert labels == [0, 1]
 
-
 def test_compare_classical_models_writes_comparison_table(
     tmp_path,
     project_root,
 ) -> None:
     base_config_path = project_root / "configs/classical.yaml"
     base_config = yaml.safe_load(base_config_path.read_text(encoding="utf-8"))
-    
-    # Run on mock/sample dataset to ensure fast test execution
+
     base_config["dataset"]["path"] = str(project_root / "data/sample/sample_news.csv")
     base_config["dataset"]["title_column"] = None
     base_config["dataset"]["combine_title_text"] = False
-    
-    # Set min_df to 1 so that features are not pruned on the tiny dataset
+
     base_config["features"]["min_df"] = 1
     
     base_config["models"] = ["logistic_regression", "naive_bayes"]

@@ -1,9 +1,4 @@
-"""Interactive command-line inference with dual-model routing.
 
-Short inputs (< 200 chars) are automatically routed to the headline-tuned SVM.
-Longer inputs go to the full article model.
-Borderline predictions (35-65% fake probability) are surfaced as 'uncertain'.
-"""
 
 from __future__ import annotations
 
@@ -15,9 +10,8 @@ from src.models.inference import load_model_artifacts, predict_text
 
 _HEADLINE_THRESHOLD_CHARS = 200
 
-
 def parse_args() -> argparse.Namespace:
-    """Parse optional overrides for config paths and article text."""
+                                                                     
     parser = argparse.ArgumentParser(
         description="Classify a news headline or article as real, fake, or uncertain."
     )
@@ -39,9 +33,8 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
 def _apply_threshold(fake_prob: float, deployment_cfg: dict) -> tuple[int, str]:
-    """Apply configurable threshold + uncertain band to a raw fake probability."""
+                                                                                  
     threshold = float(deployment_cfg.get("fake_threshold", 0.50))
     band = deployment_cfg.get("uncertain_band", [])
     if band and len(band) == 2:
@@ -50,13 +43,11 @@ def _apply_threshold(fake_prob: float, deployment_cfg: dict) -> tuple[int, str]:
             return -1, "uncertain"
     return (1, "fake") if fake_prob >= threshold else (0, "real")
 
-
 def main() -> None:
-    """Load both model tiers, route the input, and print a structured prediction."""
+                                                                                    
     args = parse_args()
     text = args.text or input("Paste a news headline or article: ").strip()
 
-    # Pick which model tier to use
     use_headline = len(text) < _HEADLINE_THRESHOLD_CHARS
     config_path = args.headline_config if use_headline else args.article_config
     tier = "headline" if use_headline else "article"
@@ -81,7 +72,6 @@ def main() -> None:
             indent=2,
         )
     )
-
 
 if __name__ == "__main__":
     main()

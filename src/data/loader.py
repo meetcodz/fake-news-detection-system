@@ -1,5 +1,3 @@
-"""Dataset loading utilities."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,7 +10,6 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 def load_dataset(
     path: str | Path,
     text_column: str = "text",
@@ -22,24 +19,7 @@ def load_dataset(
     drop_missing_text: bool = True,
     label_mapping: dict[Any, int] | None = None,
 ) -> tuple[list[str], list[int]]:
-    """Load a CSV dataset and return parallel text and label lists.
 
-    Args:
-        path: Path to the CSV file.
-        text_column: Column containing document text.
-        label_column: Column containing binary labels (0=real, 1=fake).
-        title_column: Optional title column to prepend to text.
-        combine_title_text: Whether to join ``title_column`` with ``text_column``.
-        drop_missing_text: Drop rows with empty text or missing labels.
-        label_mapping: Optional mapping for non-binary label values.
-
-    Returns:
-        Tuple of (texts, labels).
-
-    Raises:
-        FileNotFoundError: If the dataset path does not exist.
-        ValueError: If required columns are missing or data is invalid.
-    """
     dataset_path = Path(path)
     if not dataset_path.exists():
         raise FileNotFoundError(f"Dataset not found: {dataset_path}")
@@ -75,12 +55,11 @@ def load_dataset(
     )
     return texts, labels
 
-
 def load_dataset_from_config(
     dataset_config: dict[str, Any],
     root: Path,
 ) -> tuple[list[str], list[int]]:
-    """Load a dataset using paths and options from a config mapping."""
+                                                                       
     dataset_path = Path(dataset_config["path"])
     if not dataset_path.is_absolute():
         dataset_path = root / dataset_path
@@ -95,14 +74,13 @@ def load_dataset_from_config(
         label_mapping=dataset_config.get("label_mapping"),
     )
 
-
 def _validate_columns(
     frame: pd.DataFrame,
     text_column: str,
     label_column: str,
     title_column: str | None,
 ) -> None:
-    """Ensure the dataframe contains the expected schema."""
+                                                            
     required = {text_column, label_column}
     if title_column:
         required.add(title_column)
@@ -111,9 +89,8 @@ def _validate_columns(
     if missing:
         raise ValueError(f"Dataset missing required columns: {sorted(missing)}")
 
-
 def _validate_binary_labels(series: pd.Series) -> None:
-    """Ensure labels are binary integers."""
+                                            
     if series.isna().any():
         raise ValueError("Label column contains null values after cleaning")
 

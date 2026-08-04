@@ -30,6 +30,5 @@ reports/
 .DS_Store
 
 .cursor/
-.aider*
 /torch_gpu_install*.log
 AGENTS.md

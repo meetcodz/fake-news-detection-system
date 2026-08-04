@@ -224,11 +224,6 @@ jupyter notebook notebooks/
 
 ---
 
-## Results
-
-The best classical model selected after Stage 2 evaluation is a **Calibrated Linear SVM** trained on a combined title+body TF-IDF representation.  
-Full experiment protocol, metrics, and limitations: [`docs/stage_2_classical_models.md`](docs/stage_2_classical_models.md)
-
 ---
 
 ## 🛠 Tech Stack

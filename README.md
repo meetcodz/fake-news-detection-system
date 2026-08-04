@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  🔍 TruthLens
+    TruthLens
   <br>
 </h1>
 
@@ -12,7 +12,6 @@
   <img src="https://img.shields.io/badge/PyTorch-2.2-EE4C2C?style=flat-square&logo=pytorch" alt="PyTorch">
   <img src="https://img.shields.io/badge/HuggingFace-Transformers-FFD21E?style=flat-square&logo=huggingface" alt="Transformers">
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/Tests-43%20Passing-brightgreen?style=flat-square" alt="Tests">
 </p>
 
 <p align="center">
@@ -26,7 +25,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
@@ -41,7 +40,7 @@
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
 Raw Text Input
@@ -82,7 +81,7 @@ Preprocessing & Dateline Stripping
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -136,7 +135,7 @@ docker compose up --build
 
 ---
 
-## 🌐 API
+## API
 
 ### `POST /predict`
 
@@ -180,7 +179,7 @@ Interactive docs available at `http://127.0.0.1:8000/docs`
 
 ---
 
-## 📓 Notebooks
+## Notebooks
 
 Run from the repo root or any subdirectory — each notebook auto-detects the project root.
 
@@ -201,7 +200,7 @@ jupyter notebook notebooks/
 
 ---
 
-## 📁 Project Layout
+## Project Layout
 
 ```
 ├── app/                    FastAPI application (routes, schemas, middleware)
@@ -226,7 +225,7 @@ jupyter notebook notebooks/
 
 ---
 
-## 📊 Results
+## Results
 
 The best classical model selected after Stage 2 evaluation is a **Calibrated Linear SVM** trained on a combined title+body TF-IDF representation.  
 Full experiment protocol, metrics, and limitations: [`docs/stage_2_classical_models.md`](docs/stage_2_classical_models.md)

@@ -32,3 +32,6 @@ reports/
 .cursor/
 /torch_gpu_install*.log
 AGENTS.md
+tmp_pytest/
+scripts/strip_comments.py
+scripts/generate_pdf.py

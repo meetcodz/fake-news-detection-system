@@ -248,10 +248,3 @@ Full experiment protocol, metrics, and limitations: [`docs/stage_2_classical_mod
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-<p align="center">Built by <a href="https://github.com/meetcodz">Meet Modi</a></p>

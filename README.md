@@ -159,11 +159,11 @@ python -m src.models.train
 # Stage 2 Model Comparison & Metric Evaluation
 python -m src.models.compare
 
-# Stage 3 Deep Learning Model (BiLSTM / GRU)
-python -m src.models.train_deep
+# Stage 3 — GRU/BiLSTM (requires GPU recommended)
+python -m src.models.deep_compare
 
-# Stage 4 Transformer Model (DistilBERT)
-python -m src.models.train_transformer
+# Stage 4 — DistilBERT fine-tuning
+python -m src.models.transformer
 ```
 
 ---

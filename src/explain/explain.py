@@ -51,11 +51,10 @@ def _compute_saliency(model: Any, inputs: dict[str, Any], embedding_layer: Any, 
     score = logits[0, prediction_label]
     score.backward()
     handle.remove()
-    
     if not embeddings_list or embeddings_list[0].grad is None:
         return []
         
-    gradients = embeddings_list[0].grad[0]\
+    gradients = embeddings_list[0].grad[0]
     saliency = torch.norm(gradients, dim=1).cpu().numpy()
     
     seq_len = min(len(tokens), len(saliency))

@@ -1,0 +1,132 @@
+[
+  {
+    "model_name": "logistic_regression",
+    "metrics": {
+      "accuracy": 0.9576657241595978,
+      "precision": 0.9462915601023018,
+      "recall": 0.9612054035330794,
+      "f1": 0.9536901795686915,
+      "confusion_matrix": [
+        [
+          6643,
+          315
+        ],
+        [
+          224,
+          5550
+        ]
+      ],
+      "roc_auc": 0.992253884532391
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\logistic_regression\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\logistic_regression\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\logistic_regression\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\logistic_regression\\metadata.json"
+    }
+  },
+  {
+    "model_name": "naive_bayes",
+    "metrics": {
+      "accuracy": 0.8579170593779454,
+      "precision": 0.8243088499918207,
+      "recall": 0.8727052303429165,
+      "f1": 0.8478169428787752,
+      "confusion_matrix": [
+        [
+          5884,
+          1074
+        ],
+        [
+          735,
+          5039
+        ]
+      ],
+      "roc_auc": 0.9292050984714761
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\naive_bayes\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\naive_bayes\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\naive_bayes\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\naive_bayes\\metadata.json"
+    }
+  },
+  {
+    "model_name": "svm",
+    "metrics": {
+      "accuracy": 0.964813069431354,
+      "precision": 0.9621659146129816,
+      "recall": 0.9601662625562868,
+      "f1": 0.9611650485436893,
+      "confusion_matrix": [
+        [
+          6740,
+          218
+        ],
+        [
+          230,
+          5544
+        ]
+      ],
+      "roc_auc": 0.9947594170097532
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\svm\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\svm\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\svm\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\svm\\metadata.json"
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "metrics": {
+      "accuracy": 0.9372447376688658,
+      "precision": 0.920256800135158,
+      "recall": 0.9433668167648077,
+      "f1": 0.9316685196271274,
+      "confusion_matrix": [
+        [
+          6486,
+          472
+        ],
+        [
+          327,
+          5447
+        ]
+      ],
+      "roc_auc": 0.9852680584471747
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\random_forest\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\random_forest\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\random_forest\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\random_forest\\metadata.json"
+    }
+  },
+  {
+    "model_name": "xgboost",
+    "metrics": {
+      "accuracy": 0.9638705623625511,
+      "precision": 0.9540328092959672,
+      "recall": 0.9669206789054382,
+      "f1": 0.9604335110958198,
+      "confusion_matrix": [
+        [
+          6689,
+          269
+        ],
+        [
+          191,
+          5583
+        ]
+      ],
+      "roc_auc": 0.994591080552293
+    },
+    "artifacts": {
+      "vectorizer": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\xgboost\\tfidf_vectorizer.joblib",
+      "classifier": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\xgboost\\classifier.joblib",
+      "metrics": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\xgboost\\metrics.json",
+      "metadata": "C:\\Users\\Lenovo\\Desktop\\Fake-news-detection\\models\\classical\\xgboost\\metadata.json"
+    }
+  }
+]

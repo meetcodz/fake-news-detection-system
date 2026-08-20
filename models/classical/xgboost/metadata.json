@@ -1,0 +1,62 @@
+{
+  "model_name": "xgboost",
+  "classifier_class": "XGBClassifier",
+  "trained_at_utc": "2026-07-20T20:10:54.986838+00:00",
+  "dataset": {
+    "path": "data/raw/WELFake_Dataset.csv",
+    "version": "WELFake_Dataset.csv",
+    "training_samples": 50926,
+    "test_samples": 12732
+  },
+  "preprocessing": {
+    "lowercase": true,
+    "remove_urls": true,
+    "remove_html": true,
+    "strip_datelines": true,
+    "min_text_length": 10
+  },
+  "features": {
+    "type": "tfidf",
+    "max_features": 10000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 5,
+    "max_df": 0.9,
+    "sublinear_tf": true
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "stratify": true,
+    "deduplicate": true
+  },
+  "model_config": {
+    "class_weight": "balanced",
+    "random_state": 42,
+    "n_estimators": 150,
+    "max_depth": 6,
+    "learning_rate": 0.1,
+    "tree_method": "hist",
+    "device": "cpu",
+    "name": "xgboost"
+  },
+  "metrics": {
+    "accuracy": 0.9638705623625511,
+    "precision": 0.9540328092959672,
+    "recall": 0.9669206789054382,
+    "f1": 0.9604335110958198,
+    "confusion_matrix": [
+      [
+        6689,
+        269
+      ],
+      [
+        191,
+        5583
+      ]
+    ],
+    "roc_auc": 0.994591080552293
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "model_name": "gru",
+  "trained_at_utc": "2026-07-20T20:58:13.598640+00:00",
+  "device": "cuda",
+  "dataset": {
+    "path": "data/raw/WELFake_Dataset.csv",
+    "version": "WELFake_Dataset.csv",
+    "training_samples": 50900,
+    "test_samples": 12725
+  },
+  "vocabulary": {
+    "max_size": 30000,
+    "min_frequency": 2,
+    "max_sequence_length": 300
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "stratify": true,
+    "deduplicate": true,
+    "device": "cuda",
+    "batch_size": 128,
+    "epochs": 5,
+    "learning_rate": 0.001,
+    "weight_decay": 1e-05,
+    "patience": 2,
+    "num_workers": 0
+  },
+  "model_config": {
+    "embedding_dim": 128,
+    "hidden_dim": 128,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "metrics": {
+    "accuracy": 0.9587426326129665,
+    "precision": 0.9443879281112242,
+    "recall": 0.9658401248482746,
+    "f1": 0.9549935705100728,
+    "confusion_matrix": [
+      [
+        6630,
+        328
+      ],
+      [
+        197,
+        5570
+      ]
+    ],
+    "roc_auc": 0.9925458894215948
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.22679182418495827,
+      "accuracy": 0.9413752455795678,
+      "precision": 0.9061640511244136,
+      "recall": 0.9712155366741807,
+      "f1": 0.9375627720120522,
+      "confusion_matrix": [
+        [
+          6378,
+          580
+        ],
+        [
+          166,
+          5601
+        ]
+      ],
+      "roc_auc": 0.9853787318027414
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.10998266272554229,
+      "accuracy": 0.9538703339882122,
+      "precision": 0.9521648044692738,
+      "recall": 0.9457256805964973,
+      "f1": 0.9489343192692475,
+      "confusion_matrix": [
+        [
+          6684,
+          274
+        ],
+        [
+          313,
+          5454
+        ]
+      ],
+      "roc_auc": 0.9912234436119554
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.07029138323131853,
+      "accuracy": 0.9587426326129665,
+      "precision": 0.9443879281112242,
+      "recall": 0.9658401248482746,
+      "f1": 0.9549935705100728,
+      "confusion_matrix": [
+        [
+          6630,
+          328
+        ],
+        [
+          197,
+          5570
+        ]
+      ],
+      "roc_auc": 0.9925458894215948
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.03867290909257525,
+      "accuracy": 0.9581139489194499,
+      "precision": 0.9495018893850911,
+      "recall": 0.9585573088260794,
+      "f1": 0.954008111139874,
+      "confusion_matrix": [
+        [
+          6664,
+          294
+        ],
+        [
+          239,
+          5528
+        ]
+      ],
+      "roc_auc": 0.99198438170453
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.019640729978885538,
+      "accuracy": 0.9570137524557957,
+      "precision": 0.9547038327526133,
+      "recall": 0.9502340905149992,
+      "f1": 0.9524637177370296,
+      "confusion_matrix": [
+        [
+          6698,
+          260
+        ],
+        [
+          287,
+          5480
+        ]
+      ],
+      "roc_auc": 0.991615762598081
+    }
+  ]
+}

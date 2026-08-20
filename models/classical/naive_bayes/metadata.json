@@ -1,0 +1,58 @@
+{
+  "model_name": "naive_bayes",
+  "classifier_class": "MultinomialNB",
+  "trained_at_utc": "2026-07-20T20:06:18.634448+00:00",
+  "dataset": {
+    "path": "data/raw/WELFake_Dataset.csv",
+    "version": "WELFake_Dataset.csv",
+    "training_samples": 50926,
+    "test_samples": 12732
+  },
+  "preprocessing": {
+    "lowercase": true,
+    "remove_urls": true,
+    "remove_html": true,
+    "strip_datelines": true,
+    "min_text_length": 10
+  },
+  "features": {
+    "type": "tfidf",
+    "max_features": 10000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 5,
+    "max_df": 0.9,
+    "sublinear_tf": true
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "stratify": true,
+    "deduplicate": true
+  },
+  "model_config": {
+    "class_weight": "balanced",
+    "random_state": 42,
+    "alpha": 1.0,
+    "name": "naive_bayes"
+  },
+  "metrics": {
+    "accuracy": 0.8579170593779454,
+    "precision": 0.8243088499918207,
+    "recall": 0.8727052303429165,
+    "f1": 0.8478169428787752,
+    "confusion_matrix": [
+      [
+        5884,
+        1074
+      ],
+      [
+        735,
+        5039
+      ]
+    ],
+    "roc_auc": 0.9292050984714761
+  }
+}

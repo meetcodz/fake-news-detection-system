@@ -1,0 +1,62 @@
+{
+  "model_name": "svm",
+  "classifier_class": "CalibratedClassifierCV",
+  "trained_at_utc": "2026-07-20T20:06:45.713917+00:00",
+  "dataset": {
+    "path": "data/raw/WELFake_Dataset.csv",
+    "version": "WELFake_Dataset.csv",
+    "training_samples": 50926,
+    "test_samples": 12732
+  },
+  "preprocessing": {
+    "lowercase": true,
+    "remove_urls": true,
+    "remove_html": true,
+    "strip_datelines": true,
+    "min_text_length": 10
+  },
+  "features": {
+    "type": "tfidf",
+    "max_features": 10000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 5,
+    "max_df": 0.9,
+    "sublinear_tf": true
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "stratify": true,
+    "deduplicate": true
+  },
+  "model_config": {
+    "class_weight": "balanced",
+    "random_state": 42,
+    "C": 1.0,
+    "max_iter": 3000,
+    "calibrate": true,
+    "calibration_method": "sigmoid",
+    "calibration_cv": 5,
+    "name": "svm"
+  },
+  "metrics": {
+    "accuracy": 0.964813069431354,
+    "precision": 0.9621659146129816,
+    "recall": 0.9601662625562868,
+    "f1": 0.9611650485436893,
+    "confusion_matrix": [
+      [
+        6740,
+        218
+      ],
+      [
+        230,
+        5544
+      ]
+    ],
+    "roc_auc": 0.9947594170097532
+  }
+}

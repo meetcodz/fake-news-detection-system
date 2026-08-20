@@ -1,4 +1,3 @@
-
 __pycache__/
 *.py[cod]
 *.pyo
@@ -13,25 +12,22 @@ env/
 
 .vscode/
 
-/models/
-*.pt
-*.pth
-*.pkl
-*.ckpt
-
+# Ignore large raw datasets and temp pytest runs
 data/raw/
 data/processed/
 data/external/
 
 reports/
-
-.env
-
-.DS_Store
-
-.cursor/
-/torch_gpu_install*.log
-AGENTS.md
 tmp_pytest/
 scripts/strip_comments.py
 scripts/generate_pdf.py
+
+.env
+.DS_Store
+.cursor/
+/torch_gpu_install*.log
+AGENTS.md
+
+# Ignore large unused models, track lightweight production models
+/models/classical/random_forest/
+/models/transformer/

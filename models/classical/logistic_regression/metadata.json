@@ -1,0 +1,59 @@
+{
+  "model_name": "logistic_regression",
+  "classifier_class": "LogisticRegression",
+  "trained_at_utc": "2026-07-20T20:06:18.401434+00:00",
+  "dataset": {
+    "path": "data/raw/WELFake_Dataset.csv",
+    "version": "WELFake_Dataset.csv",
+    "training_samples": 50926,
+    "test_samples": 12732
+  },
+  "preprocessing": {
+    "lowercase": true,
+    "remove_urls": true,
+    "remove_html": true,
+    "strip_datelines": true,
+    "min_text_length": 10
+  },
+  "features": {
+    "type": "tfidf",
+    "max_features": 10000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 5,
+    "max_df": 0.9,
+    "sublinear_tf": true
+  },
+  "training": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "stratify": true,
+    "deduplicate": true
+  },
+  "model_config": {
+    "class_weight": "balanced",
+    "random_state": 42,
+    "C": 1.0,
+    "max_iter": 1000,
+    "name": "logistic_regression"
+  },
+  "metrics": {
+    "accuracy": 0.9576657241595978,
+    "precision": 0.9462915601023018,
+    "recall": 0.9612054035330794,
+    "f1": 0.9536901795686915,
+    "confusion_matrix": [
+      [
+        6643,
+        315
+      ],
+      [
+        224,
+        5550
+      ]
+    ],
+    "roc_auc": 0.992253884532391
+  }
+}

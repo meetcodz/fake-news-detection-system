@@ -143,13 +143,8 @@ async def predict(request: PredictionRequest):
             df, text_column="text", title_column="title", combine_title_text=True
         ).iloc[0]
 
-    if request.model_type == "deep_learning":
-        state = model_state.get("deep_learning")
-        if state is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Deep learning model (GRU) is not trained or loaded.",
-            )
+    if request.model_type == "deep_learning" and model_state.get("deep_learning") is not None:
+        state = model_state["deep_learning"]
         tier = "deep_learning"
         try:
             raw = predict_deep_text(
@@ -163,13 +158,8 @@ async def predict(request: PredictionRequest):
             raise HTTPException(status_code=422, detail=str(val_err))
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
-    elif request.model_type == "transformer":
-        state = model_state.get("transformer")
-        if state is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Transformer model (DistilBERT) is not trained or loaded.",
-            )
+    elif request.model_type == "transformer" and model_state.get("transformer") is not None:
+        state = model_state["transformer"]
         tier = "transformer"
         try:
             raw = predict_transformer_text(

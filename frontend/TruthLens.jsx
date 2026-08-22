@@ -136,7 +136,7 @@ export default function TruthLens() {
   const [status, setStatus] = useState("idle"); // idle | scanning | done | error
   const [view, setView] = useState("check"); // check | dashboard
   const [result, setResult] = useState(null);
-  const [modelType, setModelType] = useState("deep_learning"); // deep_learning | classical
+  const [modelType, setModelType] = useState("classical"); // deep_learning | classical
   const timerRef = useRef(null);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);

@@ -16,6 +16,7 @@ COPY app/ ./app/
 COPY frontend/ ./frontend/
 COPY configs/ ./configs/
 COPY data/ ./data/
+COPY models/ ./models/
 COPY pyproject.toml .
 
 RUN pip install --no-cache-dir .
@@ -30,4 +31,4 @@ ENV HOME=/home/user \
 
 EXPOSE 7860
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
